@@ -1,4 +1,4 @@
-import { Task } from './types'
+import { Task, Project } from './types'
 
 const API = import.meta.env.VITE_API_URL ?? '/api'
 
@@ -19,32 +19,51 @@ async function request<T>(
   return parseJson ? (res.json() as Promise<T>) : (undefined as T)
 }
 
-export async function getTasks(): Promise<Task[]> {
-  return request<Task[]>('/tasks')
+export async function getProjects(): Promise<Project[]> {
+  return request<Project[]>('/projects')
+}
+
+export async function createProject(name: string): Promise<Project> {
+  return request<Project>('/projects', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  })
+}
+
+export async function deleteProject(id: string): Promise<boolean> {
+  await request(`/projects/${id}`, { method: 'DELETE', parseJson: false })
+  return true
+}
+
+export async function getTasksByProjectId(projectId: string): Promise<Task[]> {
+  return request<Task[]>(`/projects/${projectId}/tasks`)
 }
 
 export async function createTask(
+  projectId: string,
   title: string,
-  startDate: string,
+  startDate: string | null,
   duration: number,
   parentId: string | null = null,
-  dependencyIds: string[] = []
+  dependencyIds: string[] = [],
+  details: string = ''
 ): Promise<Task> {
-  return request<Task>('/tasks', {
+  return request<Task>(`/projects/${projectId}/tasks`, {
     method: 'POST',
     body: JSON.stringify({
       title,
-      startDate,
+      startDate: startDate || null,
       duration,
       parentId,
       dependencyIds,
+      details,
     }),
   })
 }
 
 export async function updateTask(
   id: string,
-  updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'dependencyIds'>>
+  updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'dependencyIds' | 'details'>>
 ): Promise<Task | null> {
   return request<Task | null>(`/tasks/${id}`, {
     method: 'PATCH',
@@ -58,12 +77,14 @@ export async function deleteTask(id: string): Promise<boolean> {
 }
 
 export async function addChildTask(
+  projectId: string,
   parentId: string,
   title: string,
-  startDate: string,
-  duration: number
+  startDate: string | null,
+  duration: number,
+  details: string = ''
 ): Promise<Task> {
-  return createTask(title, startDate, duration, parentId, [])
+  return createTask(projectId, title, startDate, duration, parentId, [], details)
 }
 
 export async function addDependency(

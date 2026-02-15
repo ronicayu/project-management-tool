@@ -1,0 +1,36 @@
+.task-detail-drawer .ant-drawer-body {
+  padding-top: 16px;
+}
+
+.task-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.task-detail-section {
+  border-bottom: 1px solid var(--border, #2a2a30);
+  padding-bottom: 16px;
+}
+
+.task-detail-section:last-child {
+  border-bottom: none;
+}
+
+.task-detail-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.task-detail-section .ant-list-item {
+  padding-left: 0;
+}
+
+.task-detail-add-form {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--surface-hover, #1f1f24);
+  border-radius: 8px;
+}

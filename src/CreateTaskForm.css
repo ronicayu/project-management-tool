@@ -1,0 +1,167 @@
+.create-task-form {
+  max-width: 480px;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+/* Streamlined: single-row add */
+.create-task-form--streamlined {
+  max-width: none;
+  padding: 0.5rem 0;
+  margin-bottom: 0.75rem;
+  border: none;
+  background: transparent;
+}
+
+.create-task-form__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.create-task-form__title {
+  flex: 1;
+  min-width: 160px;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.create-task-form__title:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.create-task-form__duration-wrap {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.create-task-form__duration {
+  width: 2.5rem;
+  padding: 0.5rem 0.2rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.create-task-form__duration:focus {
+  outline: none;
+}
+
+.create-task-form__duration-unit {
+  padding: 0.25rem 0.2rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-left: 0.1rem;
+}
+
+.create-task-form__duration-unit:focus {
+  outline: none;
+  color: var(--text);
+}
+
+.create-task-form__more {
+  padding: 0.5rem 0.6rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.create-task-form__more:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.create-task-form__submit {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.create-task-form__submit:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.create-task-form__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.create-task-form__extra {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.create-task-form__extra-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.create-task-form__label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.create-task-form__input {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.create-task-form__input--sm {
+  min-width: 0;
+  width: 10rem;
+}
+
+.create-task-form__textarea {
+  resize: vertical;
+  min-height: 2.5rem;
+}
+
+.create-task-form__input:focus,
+.create-task-form__textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Legacy form-row styles if used elsewhere */
+.form-heading { margin: 0 0 1rem; font-size: 1rem; font-weight: 600; color: var(--text-muted); }
+.form-row { margin-bottom: 1rem; }
+.form-row.two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.create-task-form label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.35rem; }
+.create-task-form input, .create-task-form select, .create-task-form textarea { width: 100%; padding: 0.5rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem; }
+.create-task-form textarea { resize: vertical; min-height: 4rem; }
+.create-task-form input:focus, .create-task-form select:focus, .create-task-form textarea:focus { outline: none; border-color: var(--accent); }
+.btn-primary { padding: 0.6rem 1.2rem; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }
+.btn-primary:hover { background: var(--accent-hover); }
