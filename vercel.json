@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/catchall" },
+    { "source": "/api/(.*)", "destination": "/api/catchall?path=$1" },
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
   "headers": [
