@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: teu-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: teu
+      POSTGRES_PASSWORD: teu
+      POSTGRES_DB: teu
+    ports:
+      - "5435:5432"
+    volumes:
+      - teu_pgdata:/var/lib/postgresql/data
+
+volumes:
+  teu_pgdata:
