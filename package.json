@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev --prefix server\"",
-    "build": "vite build && cd server && npm run build",
+    "build": "vite build && cd server && npm install && npm run build",
     "preview": "vite preview",
     "db:up": "docker-compose up -d",
     "db:down": "docker-compose down",
