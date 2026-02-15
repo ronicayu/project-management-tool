@@ -1,40 +1,155 @@
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161142799}
-{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771161142819}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161149176}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161149186}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161150698}
-{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771161150699}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161157352}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161157364}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161157661}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161157668}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161214734}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161214780}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161214907}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161214912}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161436928}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161436955}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161439482}
-{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771161439483}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2"}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771161462929}
-{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771161462930}
-{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5"}
-{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2"}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162846100}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162846142}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162846150}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162846167}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162849418}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162849421}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162850490}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771162850491}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162893767}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162893786}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162902874}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771162902874}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/2fff7ef6-7808-4fb5-abf6-e3b321c6d7ee","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771162994791}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771162994820}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771162994820}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/495237e1-5977-405e-8d17-7e545bf684f4","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771163210757}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163210788}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771163210788}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163339325}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163339339}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163340862}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771163340862}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/02241388-1ec6-4f96-a10e-f5336c427926","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771163359965}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163359986}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771163359986}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/02241388-1ec6-4f96-a10e-f5336c427926","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771163377469}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163377491}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771163377492}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163537032}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771163537033}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163542769}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163542913}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163542927}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163542938}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163543396}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771163543404}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169488132}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169488133}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169492114}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169492114}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/d9a18e4b-8068-4b9c-8d3c-4e65a952fadf","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771169630175}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169630202}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169630203}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/ae0c3605-cf87-4276-8e6f-a54a8819e102","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771169646953}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169646986}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169646987}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/9e518551-7607-4f2a-be62-5e4effc71214/dependencies/ae0c3605-cf87-4276-8e6f-a54a8819e102","method":"DELETE"},"hypothesisId":"H1,H2,H5","timestamp":1771169670792}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169670820}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169670821}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/9e518551-7607-4f2a-be62-5e4effc71214/dependencies","method":"POST"},"hypothesisId":"H1,H2,H5","timestamp":1771169687286}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169687326}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169687327}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/9e518551-7607-4f2a-be62-5e4effc71214/dependencies/10b3d02a-ddce-497d-bcf5-96e1df087217","method":"DELETE"},"hypothesisId":"H1,H2,H5","timestamp":1771169723083}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169723119}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169723119}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/9e518551-7607-4f2a-be62-5e4effc71214/dependencies","method":"POST"},"hypothesisId":"H1,H2,H5","timestamp":1771169742649}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169742690}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169742690}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"POST"},"hypothesisId":"H1,H2,H5","timestamp":1771169770531}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/9e518551-7607-4f2a-be62-5e4effc71214/dependencies","method":"POST"},"hypothesisId":"H1,H2,H5","timestamp":1771169770557}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771169770572}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771169770573}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170179355}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170179373}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170186121}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170186122}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170237280}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170237280}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170380966}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170380981}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170691149}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170691165}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170691166}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170691168}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170691168}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170691169}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170691200}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170692456}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170692457}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170692459}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170692462}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170692469}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170692471}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170692471}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170694105}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170694106}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170694106}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170694113}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170694124}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170694127}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170694127}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170714897}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170714913}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170716140}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170716141}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170727281}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170727282}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170727282}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170727289}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170727290}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170727291}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170727313}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170728801}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170728801}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170728801}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170728809}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170728810}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170728810}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170728812}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170732065}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170732066}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170732066}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170732073}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170732074}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170732074}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170732085}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170736181}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170736184}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170737221}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170737221}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170780506}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170780507}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170942747}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170942908}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170944196}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170944197}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/9e518551-7607-4f2a-be62-5e4effc71214","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771170964811}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771170964831}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771170964832}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/495237e1-5977-405e-8d17-7e545bf684f4","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771171122500}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771171122530}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771171122530}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771171264741}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771171264761}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771171266186}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771171266188}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/tasks/4fdbe178-25d9-425a-a03b-0643b410bf8b","method":"PATCH"},"hypothesisId":"H1,H2,H5","timestamp":1771171357726}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771171357758}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771171357759}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771172728149}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771172728172}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173040937}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173040961}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173063338}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173063358}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173064669}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771173064670}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173076020}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771173076021}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173182956}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771173182959}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173218095}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173218112}
+{"location":"server/src/index.ts:middleware","message":"Express received","data":{"url":"/api/projects/c041a3d4-f598-4130-bb2f-8469934d29b1/tasks","method":"GET"},"hypothesisId":"H1,H2,H5","timestamp":1771173219211}
+{"location":"server/src/index.ts:GET /api/projects/:projectId/tasks","message":"Tasks route matched","data":{"projectId":"c041a3d4-f598-4130-bb2f-8469934d29b1"},"hypothesisId":"H2","timestamp":1771173219211}

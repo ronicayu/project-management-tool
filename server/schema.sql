@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   parent_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
   dependency_ids UUID[] NOT NULL DEFAULT '{}',
   details TEXT NOT NULL DEFAULT '',
+  tags TEXT[] NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

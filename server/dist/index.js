@@ -1,10 +1,37 @@
 import './env.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import * as db from './db.js';
+// #region agent log
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DEBUG_LOG = path.join(path.resolve(__dirname, '..', '..'), '.cursor', 'debug.log');
+function agentLog(payload) {
+    const line = JSON.stringify({ ...payload, timestamp: Date.now() }) + '\n';
+    try {
+        fs.mkdirSync(path.dirname(DEBUG_LOG), { recursive: true });
+        fs.appendFileSync(DEBUG_LOG, line);
+    }
+    catch (_) { }
+    fetch('http://127.0.0.1:7243/ingest/f9550900-7055-4472-bd96-cec2f709fba9', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => { });
+}
+// #endregion
 const app = express();
+// #region agent log
+app.use((req, _res, next) => {
+    agentLog({ location: 'server/src/index.ts:middleware', message: 'Express received', data: { url: req.url, method: req.method }, hypothesisId: 'H1,H2,H5' });
+    next();
+});
+// #endregion
 app.use(cors());
 app.use(express.json());
+// Prevent Vercel/CDN from caching API responses (avoids serving cached 404s)
+app.use('/api', (_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+});
 const PORT = process.env.PORT ?? 3001;
 app.get('/api/projects', async (_req, res) => {
     try {
@@ -31,6 +58,9 @@ app.post('/api/projects', async (req, res) => {
     }
 });
 app.get('/api/projects/:id', async (req, res) => {
+    // #region agent log
+    agentLog({ location: 'server/src/index.ts:GET /api/projects/:id', message: 'Route matched', data: { paramId: req.params.id }, hypothesisId: 'H1,H4' });
+    // #endregion
     try {
         const project = await db.getProjectById(req.params.id);
         if (!project)
@@ -55,6 +85,9 @@ app.delete('/api/projects/:id', async (req, res) => {
     }
 });
 app.get('/api/projects/:projectId/tasks', async (req, res) => {
+    // #region agent log
+    agentLog({ location: 'server/src/index.ts:GET /api/projects/:projectId/tasks', message: 'Tasks route matched', data: { projectId: req.params.projectId }, hypothesisId: 'H2' });
+    // #endregion
     try {
         const tasks = await db.getTasksByProjectId(req.params.projectId);
         res.json(tasks);

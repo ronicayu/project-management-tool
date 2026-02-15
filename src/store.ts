@@ -1,4 +1,4 @@
-import { Task, Project } from './types'
+import { Task, Project, ProjectStats } from './types'
 
 const API = import.meta.env.VITE_API_URL ?? '/api'
 
@@ -21,6 +21,10 @@ async function request<T>(
 
 export async function getProjects(): Promise<Project[]> {
   return request<Project[]>('/projects')
+}
+
+export async function getProjectStats(): Promise<ProjectStats[]> {
+  return request<ProjectStats[]>('/projects/stats')
 }
 
 export async function createProject(name: string): Promise<Project> {
@@ -46,7 +50,8 @@ export async function createTask(
   duration: number,
   parentId: string | null = null,
   dependencyIds: string[] = [],
-  details: string = ''
+  details: string = '',
+  tags: string[] = []
 ): Promise<Task> {
   return request<Task>(`/projects/${projectId}/tasks`, {
     method: 'POST',
@@ -57,13 +62,14 @@ export async function createTask(
       parentId,
       dependencyIds,
       details,
+      tags,
     }),
   })
 }
 
 export async function updateTask(
   id: string,
-  updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'dependencyIds' | 'details'>>
+  updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'dependencyIds' | 'details' | 'tags'>>
 ): Promise<Task | null> {
   return request<Task | null>(`/tasks/${id}`, {
     method: 'PATCH',
@@ -82,9 +88,10 @@ export async function addChildTask(
   title: string,
   startDate: string | null,
   duration: number,
-  details: string = ''
+  details: string = '',
+  tags: string[] = []
 ): Promise<Task> {
-  return createTask(projectId, title, startDate, duration, parentId, [], details)
+  return createTask(projectId, title, startDate, duration, parentId, [], details, tags)
 }
 
 export async function addDependency(

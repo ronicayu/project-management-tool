@@ -10,7 +10,7 @@ const pool = new Pool({
 })
 
 const TASK_SELECT =
-  'id, project_id, title, start_date, duration, parent_id, COALESCE(dependency_ids, ARRAY[]::uuid[]) AS dependency_ids, COALESCE(details, \'\') AS details, created_at'
+  'id, project_id, title, start_date, duration, parent_id, COALESCE(dependency_ids, ARRAY[]::uuid[]) AS dependency_ids, COALESCE(details, \'\') AS details, COALESCE(tags, ARRAY[]::text[]) AS tags, created_at'
 
 export interface ProjectRow {
   id: string
@@ -27,6 +27,7 @@ export interface TaskRow {
   parent_id: string | null
   dependency_ids: string[]
   details: string
+  tags: string[]
   created_at: Date
 }
 
@@ -39,6 +40,7 @@ function rowToTask(row: TaskRow) {
     parentId: row.parent_id,
     dependencyIds: row.dependency_ids ?? [],
     details: row.details ?? '',
+    tags: Array.isArray(row.tags) ? row.tags : [],
     createdAt: new Date(row.created_at).toISOString(),
   }
 }
@@ -94,20 +96,21 @@ export async function createTaskInProject(
   duration: number,
   parentId: string | null = null,
   dependencyIds: string[] = [],
-  details: string = ''
+  details: string = '',
+  tags: string[] = []
 ) {
   const res = await pool.query<TaskRow>(
-    `INSERT INTO tasks (project_id, title, start_date, duration, parent_id, dependency_ids, details)
-     VALUES ($1, $2, $3::date, $4, $5, $6::uuid[], $7)
+    `INSERT INTO tasks (project_id, title, start_date, duration, parent_id, dependency_ids, details, tags)
+     VALUES ($1, $2, $3::date, $4, $5, $6::uuid[], $7, $8::text[])
      RETURNING ${TASK_SELECT}`,
-    [projectId, title, startDate || null, duration, parentId, dependencyIds, details ?? '']
+    [projectId, title, startDate || null, duration, parentId, dependencyIds, details ?? '', tags ?? []]
   )
   return rowToTask(res.rows[0])
 }
 
 export async function updateTask(
   id: string,
-  updates: { title?: string; startDate?: string; duration?: number; parentId?: string | null; dependencyIds?: string[]; details?: string }
+  updates: { title?: string; startDate?: string; duration?: number; parentId?: string | null; dependencyIds?: string[]; details?: string; tags?: string[] }
 ) {
   const fields: string[] = []
   const values: unknown[] = []
@@ -135,6 +138,10 @@ export async function updateTask(
   if (updates.details !== undefined) {
     fields.push(`details = $${i++}`)
     values.push(updates.details)
+  }
+  if (updates.tags !== undefined) {
+    fields.push(`tags = $${i++}::text[]`)
+    values.push(Array.isArray(updates.tags) ? updates.tags : [])
   }
   if (fields.length === 0) return null
   values.push(id)
@@ -176,6 +183,35 @@ export async function removeDependency(taskId: string, dependsOnTaskId: string):
     [taskId, dependsOnTaskId]
   )
   return (res.rowCount ?? 0) > 0
+}
+
+export async function getProjectStats() {
+  const res = await pool.query(`
+    SELECT
+      p.id as project_id,
+      COALESCE(s.total_tasks, 0)::int as total_tasks,
+      COALESCE(s.in_progress, 0)::int as in_progress,
+      COALESCE(s.done, 0)::int as done,
+      s.latest_due
+    FROM projects p
+    LEFT JOIN (
+      SELECT
+        project_id,
+        COUNT(*) as total_tasks,
+        COUNT(*) FILTER (WHERE start_date IS NOT NULL AND start_date <= CURRENT_DATE AND (start_date + duration) > CURRENT_DATE) as in_progress,
+        COUNT(*) FILTER (WHERE start_date IS NOT NULL AND (start_date + duration) <= CURRENT_DATE) as done,
+        MAX(start_date + duration) as latest_due
+      FROM tasks
+      GROUP BY project_id
+    ) s ON s.project_id = p.id
+  `)
+  return res.rows.map((row: { project_id: string; total_tasks: number; in_progress: number; done: number; latest_due: Date | null }) => ({
+    projectId: row.project_id,
+    totalTasks: Number(row.total_tasks),
+    inProgress: Number(row.in_progress),
+    done: Number(row.done),
+    latestDue: row.latest_due ? new Date(row.latest_due).toISOString().split('T')[0] : null,
+  }))
 }
 
 export async function getTaskById(id: string) {

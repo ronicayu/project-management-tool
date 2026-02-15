@@ -12,7 +12,16 @@ export interface Task {
   parentId: string | null // null = top-level task
   dependencyIds: string[] // task ids that must complete before this starts
   details: string // description / notes
+  tags: string[] // e.g. ['change-management']
   createdAt: string
+}
+
+export interface ProjectStats {
+  projectId: string
+  totalTasks: number
+  inProgress: number
+  done: number
+  latestDue: string | null
 }
 
 export type ViewMode = 'list' | 'timeline' | 'gantt' | 'dependencies'

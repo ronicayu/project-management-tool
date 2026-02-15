@@ -30,7 +30,7 @@ interface TaskDetailDrawerProps {
   onClose: () => void
   onUpdate: (
     id: string,
-    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details'>>
+    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details' | 'tags'>>
   ) => void
   onDelete: (id: string) => void
   onAddChild: (parentId: string, title: string, startDate: string | null, duration: number) => void
@@ -41,7 +41,8 @@ interface TaskDetailDrawerProps {
     startDate: string | null,
     duration: number,
     parentId: string | null,
-    details: string
+    details: string,
+    tags?: string[]
   ) => void
   onRemoveDependency: (taskId: string, dependsOnTaskId: string) => void
   onOpenTask: (id: string) => void
@@ -65,6 +66,7 @@ export function TaskDetailDrawer({
   const [startDate, setStartDate] = useState<string | null>(null)
   const [duration, setDuration] = useState(1)
   const [details, setDetails] = useState('')
+  const [tagsInput, setTagsInput] = useState('')
   const [showAddChild, setShowAddChild] = useState(false)
   const [addChildTitle, setAddChildTitle] = useState('')
   const [addChildStart, setAddChildStart] = useState('')
@@ -77,6 +79,7 @@ export function TaskDetailDrawer({
   const [addDepNewDuration, setAddDepNewDuration] = useState(1)
   const [addDepNewUnit, setAddDepNewUnit] = useState<DurationUnit>('day')
   const [addDepNewDetails, setAddDepNewDetails] = useState('')
+  const [addDepNewTagsInput, setAddDepNewTagsInput] = useState('')
 
   useEffect(() => {
     if (task) {
@@ -84,6 +87,7 @@ export function TaskDetailDrawer({
       setStartDate(task.startDate)
       setDuration(task.duration)
       setDetails(task.details ?? '')
+      setTagsInput((task.tags ?? []).join(', '))
       setShowAddChild(false)
       setShowAddDep(false)
     }
@@ -103,11 +107,13 @@ export function TaskDetailDrawer({
   )
 
   const handleSave = () => {
+    const tags = tagsInput.split(',').map((s) => s.trim()).filter(Boolean)
     onUpdate(task.id, {
       title: title.trim() || task.title,
       startDate: startDate?.trim() || null,
       duration,
       details: details.trim(),
+      tags,
     })
   }
 
@@ -134,19 +140,22 @@ export function TaskDetailDrawer({
 
   const handleAddDepNew = () => {
     if (!addDepNewTitle.trim()) return
+    const tags = addDepNewTagsInput.split(',').map((s) => s.trim()).filter(Boolean)
     onCreateTaskAndAddDependency(
       task.id,
       addDepNewTitle.trim(),
       addDepNewStart.trim() || null,
       durationToDays(addDepNewDuration, addDepNewUnit),
       null,
-      addDepNewDetails
+      addDepNewDetails,
+      tags
     )
     setAddDepNewTitle('')
     setAddDepNewStart('')
     setAddDepNewDuration(1)
     setAddDepNewUnit('day')
     setAddDepNewDetails('')
+    setAddDepNewTagsInput('')
     setShowAddDep(false)
   }
 
@@ -219,6 +228,16 @@ export function TaskDetailDrawer({
             onChange={(e) => setDetails(e.target.value)}
             placeholder="Notes…"
             rows={4}
+            style={{ marginTop: 4 }}
+          />
+        </div>
+
+        <div className="task-detail-section">
+          <Typography.Text strong>Tags</Typography.Text>
+          <Input
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="e.g. change-management, risk (comma-separated)"
             style={{ marginTop: 4 }}
           />
         </div>
@@ -315,6 +334,11 @@ export function TaskDetailDrawer({
                   value={addDepNewDetails}
                   onChange={(e) => setAddDepNewDetails(e.target.value)}
                   rows={2}
+                />
+                <Input
+                  placeholder="Tags (comma-separated)"
+                  value={addDepNewTagsInput}
+                  onChange={(e) => setAddDepNewTagsInput(e.target.value)}
                 />
                 <Button type="primary" size="small" onClick={handleAddDepNew} disabled={!addDepNewTitle.trim()}>
                   Create & add as dependency

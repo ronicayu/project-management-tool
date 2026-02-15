@@ -11,7 +11,7 @@ const DURATION_UNITS: { value: DurationUnit; label: string }[] = [
 ]
 
 interface CreateTaskFormProps {
-  onCreate: (title: string, startDate: string | null, duration: number, parentId: string | null, details: string) => void
+  onCreate: (title: string, startDate: string | null, duration: number, parentId: string | null, details: string, tags?: string[]) => void
   tasks: Task[]
 }
 
@@ -22,19 +22,22 @@ export function CreateTaskForm({ onCreate, tasks }: CreateTaskFormProps) {
   const [durationUnit, setDurationUnit] = useState<DurationUnit>('day')
   const [parentId, setParentId] = useState<string | null>(null)
   const [details, setDetails] = useState('')
+  const [tagsInput, setTagsInput] = useState('')
   const [expanded, setExpanded] = useState(false)
 
   const handleSubmit = () => {
     const t = title.trim()
     if (!t) return
     const durationDays = durationToDays(duration, durationUnit)
-    onCreate(t, startDate || null, durationDays, parentId, details)
+    const tags = tagsInput.split(',').map((s) => s.trim()).filter(Boolean)
+    onCreate(t, startDate || null, durationDays, parentId, details, tags)
     setTitle('')
     setStartDate('')
     setDuration(1)
     setDurationUnit('day')
     setParentId(null)
     setDetails('')
+    setTagsInput('')
     setExpanded(false)
   }
 
@@ -95,6 +98,14 @@ export function CreateTaskForm({ onCreate, tasks }: CreateTaskFormProps) {
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Notes…"
               rows={2}
+              style={{ width: 360 }}
+            />
+          </Form.Item>
+          <Form.Item label="Tags" style={{ marginBottom: 0, marginTop: 8 }}>
+            <Input
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="e.g. change-management, risk (comma-separated)"
               style={{ width: 360 }}
             />
           </Form.Item>

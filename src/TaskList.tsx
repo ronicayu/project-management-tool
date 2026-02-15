@@ -29,7 +29,7 @@ interface TaskListProps {
   tasks: Task[]
   onUpdate: (
     id: string,
-    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details'>>
+    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details' | 'tags'>>
   ) => void
   onDelete: (id: string) => void
   onAddChild: (parentId: string, title: string, startDate: string | null, duration: number) => void
@@ -40,7 +40,8 @@ interface TaskListProps {
     startDate: string | null,
     duration: number,
     parentId: string | null,
-    details: string
+    details: string,
+    tags?: string[]
   ) => void
   onRemoveDependency: (taskId: string, dependsOnTaskId: string) => void
   onOpenTask?: (taskId: string) => void
@@ -144,10 +145,12 @@ function TaskNodeContent({
   const [newDepDurationUnit, setNewDepDurationUnit] = useState<DurationUnit>('day')
   const [newDepParentId, setNewDepParentId] = useState<string | null>(null)
   const [newDepDetails, setNewDepDetails] = useState('')
+  const [newDepTagsInput, setNewDepTagsInput] = useState('')
   const [editTitle, setEditTitle] = useState(task.title)
   const [editStart, setEditStart] = useState(task.startDate ?? '')
   const [editDuration, setEditDuration] = useState(task.duration)
   const [editDetails, setEditDetails] = useState(task.details ?? '')
+  const [editTagsInput, setEditTagsInput] = useState((task.tags ?? []).join(', '))
   const [depDropOver, setDepDropOver] = useState(false)
 
   const canDependOn = tasks.filter((t) => t.id !== task.id && !task.dependencyIds.includes(t.id))
@@ -157,11 +160,13 @@ function TaskNodeContent({
     .filter(Boolean) as Task[]
 
   const saveEdit = () => {
+    const tags = editTagsInput.split(',').map((s) => s.trim()).filter(Boolean)
     onUpdate(task.id, {
       title: editTitle.trim() || task.title,
       startDate: editStart.trim() || null,
       duration: editDuration,
       details: editDetails,
+      tags,
     })
     setEditing(false)
   }
@@ -216,6 +221,12 @@ function TaskNodeContent({
                   rows={2}
                   style={{ width: '100%', maxWidth: 400 }}
                 />
+                <Input
+                  value={editTagsInput}
+                  onChange={(e) => setEditTagsInput(e.target.value)}
+                  placeholder="Tags (comma-separated)"
+                  style={{ width: '100%', maxWidth: 400 }}
+                />
                 <Space>
                   <Button type="primary" size="small" onClick={saveEdit}>Save</Button>
                   <Button size="small" onClick={() => setEditing(false)}>Cancel</Button>
@@ -238,15 +249,13 @@ function TaskNodeContent({
               <span className="task-meta task-meta-inline">
                 {task.startDate ? format(parseISO(task.startDate), 'MMM d') : 'No date'}
                 · {task.duration}d
+                {(task.tags ?? []).length > 0 && (
+                  <span className="task-tags"> · {(task.tags ?? []).join(', ')}</span>
+                )}
                 {deps.length > 0 && (
                   <span className="task-deps"> · ← {deps.map((d) => d.title).join(', ')}</span>
                 )}
               </span>
-              {(task.details ?? '').trim() ? (
-                <Typography.Text type="secondary" className="task-details" style={{ display: 'block', marginTop: 4 }}>
-                  {task.details}
-                </Typography.Text>
-              ) : null}
             </>
           )}
         </div>
@@ -261,6 +270,7 @@ function TaskNodeContent({
                 setEditStart(task.startDate ?? '')
                 setEditDuration(task.duration)
                 setEditDetails(task.details ?? '')
+                setEditTagsInput((task.tags ?? []).join(', '))
                 setEditing(true)
               }}
               title="Edit"
@@ -280,9 +290,7 @@ function TaskNodeContent({
               onDragStart={handleDepDragStart}
               title="Drag to another task to depend on it"
               aria-label={`Drag to make this task depend on another`}
-            >
-              <LinkOutlined style={{ marginLeft: 2 }} />
-            </span>
+            />
             <Popconfirm
               title="Delete this task?"
               description="Sub-tasks will be deleted too. This cannot be undone."
@@ -314,7 +322,7 @@ function TaskNodeContent({
               }}
               title="Drop a task here to make it depend on this task"
             >
-              {depDropOver ? '← drop' : '⊕'}
+              {depDropOver ? '← drop' : ''}
             </div>
           </Space>
         )}
@@ -406,18 +414,26 @@ function TaskNodeContent({
                   style={{ width: 140 }}
                   options={getChildren(tasks, null).filter((t) => t.id !== task.id).map((t) => ({ value: t.id, label: t.title }))}
                 />
+                <Input
+                  placeholder="Tags (comma-separated)"
+                  value={newDepTagsInput}
+                  onChange={(e) => setNewDepTagsInput(e.target.value)}
+                  style={{ minWidth: 160 }}
+                />
                 <Button
                   type="primary"
                   size="small"
                   onClick={() => {
                     if (newDepTitle.trim()) {
+                      const tags = newDepTagsInput.split(',').map((s) => s.trim()).filter(Boolean)
                       onCreateTaskAndAddDependency(
                         task.id,
                         newDepTitle.trim(),
                         newDepStart.trim() || null,
                         durationToDays(newDepDuration, newDepDurationUnit),
                         newDepParentId,
-                        newDepDetails
+                        newDepDetails,
+                        tags
                       )
                       setShowAddDep(false)
                       setAddDepChoice('')
@@ -427,12 +443,13 @@ function TaskNodeContent({
                       setNewDepDurationUnit('day')
                       setNewDepParentId(null)
                       setNewDepDetails('')
+                      setNewDepTagsInput('')
                     }
                   }}
                 >
                   Create & add dependency
                 </Button>
-                <Button size="small" onClick={() => { setAddDepChoice(''); setNewDepTitle(''); setNewDepStart(''); setNewDepDuration(1); setNewDepDurationUnit('day'); setNewDepParentId(null); setNewDepDetails('') }}>Back</Button>
+                <Button size="small" onClick={() => { setAddDepChoice(''); setNewDepTitle(''); setNewDepStart(''); setNewDepDuration(1); setNewDepDurationUnit('day'); setNewDepParentId(null); setNewDepDetails(''); setNewDepTagsInput('') }}>Back</Button>
               </Space>
             </div>
           )}

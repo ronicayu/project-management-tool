@@ -3,6 +3,7 @@ import { Layout, Alert, Button, Space, Segmented, Spin } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import {
   getProjects,
+  getProjectStats,
   createProject,
   deleteProject,
   getTasksByProjectId,
@@ -13,7 +14,7 @@ import {
   addDependency,
   removeDependency,
 } from './store'
-import type { Task, Project, ViewMode, TimeUnit } from './types'
+import type { Task, Project, ProjectStats, ViewMode, TimeUnit } from './types'
 import { TaskList } from './TaskList'
 import { TimelineView } from './TimelineView'
 import { GanttView } from './GanttView'
@@ -27,6 +28,7 @@ const { Header, Content } = Layout
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([])
+  const [projectStatsMap, setProjectStatsMap] = useState<Record<string, ProjectStats>>({})
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [view, setView] = useState<ViewMode>('list')
@@ -37,8 +39,11 @@ export default function App() {
 
   const refreshProjects = useCallback(async () => {
     try {
-      const data = await getProjects()
+      const [data, stats] = await Promise.all([getProjects(), getProjectStats()])
       setProjects(data)
+      const map: Record<string, ProjectStats> = {}
+      for (const s of stats) map[s.projectId] = s
+      setProjectStatsMap(map)
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load projects')
@@ -93,11 +98,12 @@ export default function App() {
     startDate: string | null,
     duration: number,
     parentId: string | null,
-    details: string
+    details: string,
+    tags: string[] = []
   ) => {
     if (!currentProject) return
     try {
-      await createTask(currentProject.id, title, startDate, duration, parentId, [], details)
+      await createTask(currentProject.id, title, startDate, duration, parentId, [], details, tags)
       await refreshTasks()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create task')
@@ -106,7 +112,7 @@ export default function App() {
 
   const handleUpdateTask = async (
     id: string,
-    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details'>>
+    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details' | 'tags'>>
   ) => {
     try {
       await updateTask(id, updates)
@@ -155,11 +161,12 @@ export default function App() {
     startDate: string | null,
     duration: number,
     parentId: string | null,
-    details: string
+    details: string,
+    tags: string[] = []
   ) => {
     if (!currentProject) return
     try {
-      const newTask = await createTask(currentProject.id, title, startDate, duration, parentId, [], details)
+      const newTask = await createTask(currentProject.id, title, startDate, duration, parentId, [], details, tags)
       await addDependency(taskId, newTask.id)
       await refreshTasks()
     } catch (e) {
@@ -178,38 +185,58 @@ export default function App() {
 
   const showProjectList = currentProject === null
 
+  // ── Project List Page (full-page layout, no header) ──
+  if (showProjectList) {
+    return (
+      <>
+        {error && (
+          <Alert
+            message={error}
+            type="error"
+            closable
+            onClose={() => setError(null)}
+            style={{ position: 'fixed', top: 16, right: 16, zIndex: 1000, maxWidth: 400 }}
+          />
+        )}
+        <ProjectList
+          projects={projects}
+          projectStats={projectStatsMap}
+          loading={loading}
+          onCreateProject={handleCreateProject}
+          onDeleteProject={handleDeleteProject}
+          onEnterProject={(p) => setCurrentProject(p)}
+        />
+      </>
+    )
+  }
+
+  // ── Task Views (existing layout with header) ──
   return (
     <Layout className="app">
       <Header className="app-header">
         <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
           <Space>
-            {currentProject && (
-              <Button
-                type="text"
-                icon={<ArrowLeftOutlined />}
-                onClick={() => setCurrentProject(null)}
-                style={{ color: 'rgba(255,255,255,0.85)' }}
-              >
-                Projects
-              </Button>
-            )}
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => setCurrentProject(null)}
+              style={{ color: 'rgba(255,255,255,0.85)' }}
+            >
+              Projects
+            </Button>
             <span className="app-title">TEU</span>
-            <span className="app-subtitle">
-              {currentProject ? currentProject.name : 'Project management'}
-            </span>
+            <span className="app-subtitle">{currentProject.name}</span>
           </Space>
-          {currentProject && (
-            <Segmented
-              value={view}
-              onChange={(v) => setView(v as ViewMode)}
-              options={[
-                { label: 'List', value: 'list' },
-                { label: 'Timeline', value: 'timeline' },
-                { label: 'Gantt', value: 'gantt' },
-                { label: 'Dependencies', value: 'dependencies' },
-              ]}
-            />
-          )}
+          <Segmented
+            value={view}
+            onChange={(v) => setView(v as ViewMode)}
+            options={[
+              { label: 'List', value: 'list' },
+              { label: 'Timeline', value: 'timeline' },
+              { label: 'Gantt', value: 'gantt' },
+              { label: 'Dependencies', value: 'dependencies' },
+            ]}
+          />
         </Space>
       </Header>
 
@@ -224,20 +251,7 @@ export default function App() {
           />
         )}
 
-        {showProjectList ? (
-          loading ? (
-            <div style={{ textAlign: 'center', padding: 48 }}>
-              <Spin size="large" tip="Loading projects…" />
-            </div>
-          ) : (
-            <ProjectList
-              projects={projects}
-              onCreateProject={handleCreateProject}
-              onDeleteProject={handleDeleteProject}
-              onEnterProject={(p) => setCurrentProject(p)}
-            />
-          )
-        ) : loading ? (
+        {loading ? (
           <div style={{ textAlign: 'center', padding: 48 }}>
             <Spin size="large" tip="Loading tasks…" />
           </div>
@@ -299,20 +313,18 @@ export default function App() {
           </>
         )}
       </Content>
-      {currentProject && (
-        <TaskDetailDrawer
-          taskId={selectedTaskId}
-          tasks={tasks}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdate={handleUpdateTask}
-          onDelete={handleDeleteTask}
-          onAddChild={handleAddChild}
-          onAddDependency={handleAddDependency}
-          onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
-          onRemoveDependency={handleRemoveDependency}
-          onOpenTask={setSelectedTaskId}
-        />
-      )}
+      <TaskDetailDrawer
+        taskId={selectedTaskId}
+        tasks={tasks}
+        onClose={() => setSelectedTaskId(null)}
+        onUpdate={handleUpdateTask}
+        onDelete={handleDeleteTask}
+        onAddChild={handleAddChild}
+        onAddDependency={handleAddDependency}
+        onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
+        onRemoveDependency={handleRemoveDependency}
+        onOpenTask={setSelectedTaskId}
+      />
     </Layout>
   )
 }
