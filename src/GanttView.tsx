@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { CaretRightOutlined, CaretDownOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import type { Task, TimeUnit, ViewMode } from './types'
@@ -19,6 +19,8 @@ const ZOOM_OPTIONS = [50, 75, 100, 125, 150] as const
 
 const ROW_HEIGHT = 48
 const BAR_MARGIN = 4
+/** Horizontal offset per lane so multiple edges into the same target don't overlap. */
+const EDGE_LANE_OFFSET = 14
 
 const UNIT_WIDTH_PX: Record<TimeUnit, number> = {
   day: 24,
@@ -107,13 +109,45 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
   const columnCount = Math.max(ticks.length, Math.ceil(totalUnits))
   const chartWidth = columnCount * unitWidth
 
-  const taskById = new Map(visibleTasks.map((t) => [t.id, t]))
-  const rowIndexById = new Map<string, number>()
-  rows.forEach((row, i) => {
-    rowIndexById.set(row.parent.id, i)
-    row.children.forEach((c) => rowIndexById.set(c.id, i))
-  })
+  const taskById = new Map(tasks.map((t) => [t.id, t]))
   const edges = buildDependencyEdges(visibleTasks, taskById)
+  const rowIndexById = useMemo(() => {
+    const m = new Map<string, number>()
+    rows.forEach((row, i) => {
+      m.set(row.parent.id, i)
+      row.children.forEach((c) => m.set(c.id, i))
+    })
+    return m
+  }, [rows])
+  const visibleEdges = useMemo(
+    () => edges.filter((e) => rowIndexById.has(e.from.id) && rowIndexById.has(e.to.id)),
+    [edges, rowIndexById]
+  )
+  const { edgeLane, edgeLaneCount } = useMemo(() => {
+    const edgesByTarget = new Map<string, { from: Task; to: Task }[]>()
+    visibleEdges.forEach((e) => {
+      const list = edgesByTarget.get(e.to.id) ?? []
+      list.push(e)
+      edgesByTarget.set(e.to.id, list)
+    })
+    edgesByTarget.forEach((list) => {
+      list.sort((a, b) => {
+        const rowA = rowIndexById.get(a.from.id) ?? 0
+        const rowB = rowIndexById.get(b.from.id) ?? 0
+        return rowA !== rowB ? rowA - rowB : a.from.id.localeCompare(b.from.id)
+      })
+    })
+    const edgeLane = new Map<string, number>()
+    const edgeLaneCount = new Map<string, number>()
+    visibleEdges.forEach((e) => {
+      const list = edgesByTarget.get(e.to.id) ?? []
+      const idx = list.findIndex((x) => x.from.id === e.from.id && x.to.id === e.to.id)
+      const key = `${e.from.id}-${e.to.id}`
+      edgeLane.set(key, idx >= 0 ? idx : 0)
+      edgeLaneCount.set(key, list.length)
+    })
+    return { edgeLane, edgeLaneCount }
+  }, [visibleEdges, rowIndexById])
   const hasChildren = (tid: string) => tasks.some((t) => t.parentId === tid)
 
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -362,7 +396,7 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
                       />
                     </marker>
                   </defs>
-                  {edges.map(({ from, to }, k) => {
+                  {visibleEdges.map(({ from, to }, k) => {
                     const fromRow = rowIndexById.get(from.id) ?? 0
                     const toRow = rowIndexById.get(to.id) ?? 0
                     const xFromEnd = BAR_MARGIN + leftPx(from) + widthPx(from)
@@ -370,7 +404,12 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
                     const yFrom = fromRow * ROW_HEIGHT + ROW_HEIGHT / 2
                     const yTo = toRow * ROW_HEIGHT + ROW_HEIGHT / 2
                     const midX = (xFromEnd + xToStart) / 2
-                    const path = `M ${xFromEnd} ${yFrom} L ${midX} ${yFrom} L ${midX} ${yTo} L ${xToStart} ${yTo}`
+                    const key = `${from.id}-${to.id}`
+                    const laneIndex = edgeLane.get(key) ?? 0
+                    const nLanes = edgeLaneCount.get(key) ?? 1
+                    const laneOffset = (laneIndex - (nLanes - 1) / 2) * EDGE_LANE_OFFSET
+                    const cpx = midX + laneOffset
+                    const path = `M ${xFromEnd} ${yFrom} L ${cpx} ${yFrom} L ${cpx} ${yTo} L ${xToStart} ${yTo}`
                     return (
                       <path
                         key={`${from.id}-${to.id}-${k}`}
