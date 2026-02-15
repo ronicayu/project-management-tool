@@ -4,6 +4,7 @@ A lightweight project management tool with tasks, dependencies, subtasks, and Ga
 
 ## Features
 
+- **Projects** — Create projects; open one to manage its tasks.
 - **Create task** — Add tasks with title, start date, and duration (days).
 - **Dependencies** — Link tasks so one cannot start until others are done.
 - **Child tasks** — Break work into subtasks under a parent.
@@ -31,10 +32,16 @@ docker-compose down
 docker-compose down -v
 ```
 
-Create the `tasks` table (run once after first `up`):
+Create tables (run once after first `up`). **New installs:**
 
 ```bash
-docker-compose exec -T postgres psql -U teu -d teu < server/schema.sql
+npm run db:init
+```
+
+**If you already had tasks** (no projects yet), run the migration instead:
+
+```bash
+npm run db:migrate
 ```
 
 Set in `server/.env`:
@@ -75,3 +82,11 @@ cd server && npm run build
 ```
 
 Production: set `PORT` and `DATABASE_URL` for the server; serve the frontend `dist/` with any static host.
+
+## Deploy to Vercel (single project)
+
+One Vercel project serves both the frontend and the API (serverless). No separate backend host.
+
+1. **Database** — Add Postgres (Vercel Postgres in the dashboard, or Neon/Supabase/etc.). In the Vercel project, set **`DATABASE_URL`** (or **`POSTGRES_URL`** if using Vercel Postgres) to the connection string.
+2. **Schema** — Run the schema once against that database: `psql $DATABASE_URL -f server/schema.sql` (or use your provider’s SQL runner).
+3. **Deploy** — Connect the repo to Vercel. Build command: `npm run build`. Do not set `VITE_API_URL`; the app uses `/api` on the same origin.

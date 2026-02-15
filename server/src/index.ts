@@ -9,9 +9,55 @@ app.use(express.json())
 
 const PORT = process.env.PORT ?? 3001
 
-app.get('/api/tasks', async (_req, res) => {
+app.get('/api/projects', async (_req, res) => {
   try {
-    const tasks = await db.getTasks()
+    const projects = await db.getProjects()
+    res.json(projects)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to load projects' })
+  }
+})
+
+app.post('/api/projects', async (req, res) => {
+  try {
+    const { name } = req.body
+    if (!name || String(name).trim() === '') {
+      return res.status(400).json({ error: 'name is required' })
+    }
+    const project = await db.createProject(String(name).trim())
+    res.status(201).json(project)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to create project' })
+  }
+})
+
+app.get('/api/projects/:id', async (req, res) => {
+  try {
+    const project = await db.getProjectById(req.params.id)
+    if (!project) return res.status(404).json({ error: 'Project not found' })
+    res.json(project)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to load project' })
+  }
+})
+
+app.delete('/api/projects/:id', async (req, res) => {
+  try {
+    const deleted = await db.deleteProject(req.params.id)
+    if (!deleted) return res.status(404).json({ error: 'Project not found' })
+    res.status(204).send()
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete project' })
+  }
+})
+
+app.get('/api/projects/:projectId/tasks', async (req, res) => {
+  try {
+    const tasks = await db.getTasksByProjectId(req.params.projectId)
     res.json(tasks)
   } catch (err) {
     console.error(err)
@@ -19,18 +65,21 @@ app.get('/api/tasks', async (_req, res) => {
   }
 })
 
-app.post('/api/tasks', async (req, res) => {
+app.post('/api/projects/:projectId/tasks', async (req, res) => {
   try {
-    const { title, startDate, duration, parentId = null, dependencyIds = [] } = req.body
-    if (!title || !startDate || duration == null) {
-      return res.status(400).json({ error: 'title, startDate, and duration are required' })
+    const { projectId } = req.params
+    const { title, startDate, duration, parentId = null, dependencyIds = [], details = '' } = req.body
+    if (!title || duration == null) {
+      return res.status(400).json({ error: 'title and duration are required' })
     }
-    const task = await db.createTask(
+    const task = await db.createTaskInProject(
+      projectId,
       String(title),
-      String(startDate),
+      startDate != null && String(startDate).trim() !== '' ? String(startDate) : null,
       Number(duration),
       parentId ?? null,
-      Array.isArray(dependencyIds) ? dependencyIds : []
+      Array.isArray(dependencyIds) ? dependencyIds : [],
+      String(details ?? '')
     )
     res.status(201).json(task)
   } catch (err) {
@@ -48,7 +97,9 @@ app.patch('/api/tasks/:id', async (req, res) => {
       title: updates.title,
       startDate: updates.startDate,
       duration: updates.duration,
+      parentId: updates.parentId,
       dependencyIds: updates.dependencyIds,
+      details: updates.details,
     })
     if (!task) return res.status(404).json({ error: 'Task not found' })
     res.json(task)
@@ -102,6 +153,10 @@ app.delete('/api/tasks/:id/dependencies/:depId', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`)
-})
+export default app
+
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server listening on http://localhost:${PORT}`)
+  })
+}
