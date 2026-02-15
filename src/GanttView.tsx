@@ -477,9 +477,9 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
                                 width: displayWidth,
                               }}
                               title={
-                                effective.startDate
+                                (effective.startDate
                                   ? `${task.title}: ${format(parseISO(effective.startDate), 'MMM d')} – ${effective.duration} days`
-                                  : `${task.title}: No start date – ${effective.duration}d`
+                                  : `${task.title}: No start date – ${effective.duration}d`)
                                 + (onUpdateTask && !hasChildren(task.id) ? '. Drag to reschedule, drag right edge to change duration.' : '')
                               }
                               onMouseDown={(e) => handleBarMouseDown(e, task)}

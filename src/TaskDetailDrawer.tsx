@@ -263,8 +263,7 @@ export function TaskDetailDrawer({
                   <List.Item.Meta
                     title={t.title}
                     description={
-                      t.startDate ? format(parseISO(t.startDate), 'MMM d') : 'No date'
-                      + ` · ${t.duration}d`
+                      (t.startDate ? format(parseISO(t.startDate), 'MMM d') : 'No date') + ` · ${t.duration}d`
                     }
                   />
                 </List.Item>
