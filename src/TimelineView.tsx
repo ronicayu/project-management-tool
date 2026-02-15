@@ -159,7 +159,10 @@ export function TimelineView({ tasks, timeUnit, onUpdateTask }: TimelineViewProp
                 <div key={tick.date.getTime()} className="timeline-ruler-cell" />
               ))}
             </div>
-            <div className="timeline-bars">
+            <div
+              className="timeline-bars"
+              style={{ height: Math.max(200, rows.length * 44) }}
+            >
               {rows.map((row, i) => (
                 <div
                   key={row.parent.id}

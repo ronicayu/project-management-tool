@@ -15,8 +15,8 @@
 
 .timeline-scroll {
   overflow-x: auto;
-  overflow-y: auto;
-  max-height: 80vh;
+  overflow-y: visible;
+  max-height: none;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
@@ -26,7 +26,7 @@
   min-width: 800px;
   display: grid;
   grid-template-columns: 160px 1fr;
-  grid-template-rows: auto 28px 1fr;
+  grid-template-rows: auto 28px auto;
   padding: 1rem;
   gap: 0 0.75rem;
 }
