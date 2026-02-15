@@ -1,36 +1,104 @@
 import { useState, useCallback, useEffect } from 'react'
-import { getTasks, createTask, updateTask, deleteTask, addChildTask, addDependency, removeDependency } from './store'
-import type { Task, ViewMode } from './types'
+import { Layout, Alert, Button, Space, Segmented, Spin } from 'antd'
+import { ArrowLeftOutlined } from '@ant-design/icons'
+import {
+  getProjects,
+  createProject,
+  deleteProject,
+  getTasksByProjectId,
+  createTask,
+  updateTask,
+  deleteTask,
+  addChildTask,
+  addDependency,
+  removeDependency,
+} from './store'
+import type { Task, Project, ViewMode, TimeUnit } from './types'
 import { TaskList } from './TaskList'
 import { TimelineView } from './TimelineView'
 import { GanttView } from './GanttView'
+import { DependencyView } from './DependencyView'
 import { CreateTaskForm } from './CreateTaskForm'
+import { ProjectList } from './ProjectList'
+import { TaskDetailDrawer } from './TaskDetailDrawer'
 import './App.css'
 
+const { Header, Content } = Layout
+
 export default function App() {
+  const [projects, setProjects] = useState<Project[]>([])
+  const [currentProject, setCurrentProject] = useState<Project | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [view, setView] = useState<ViewMode>('list')
+  const [timeUnit, setTimeUnit] = useState<TimeUnit>('week')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
-  const refresh = useCallback(async () => {
+  const refreshProjects = useCallback(async () => {
     try {
-      const data = await getTasks()
+      const data = await getProjects()
+      setProjects(data)
+      setError(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load projects')
+    }
+  }, [])
+
+  const refreshTasks = useCallback(async () => {
+    if (!currentProject) return
+    try {
+      const data = await getTasksByProjectId(currentProject.id)
       setTasks(data)
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load tasks')
     }
-  }, [])
+  }, [currentProject])
 
   useEffect(() => {
-    refresh().finally(() => setLoading(false))
-  }, [refresh])
+    refreshProjects().finally(() => setLoading(false))
+  }, [refreshProjects])
 
-  const handleCreateTask = async (title: string, startDate: string, duration: number, parentId: string | null) => {
+  useEffect(() => {
+    if (!currentProject) {
+      setTasks([])
+      return
+    }
+    setLoading(true)
+    refreshTasks().finally(() => setLoading(false))
+  }, [currentProject, refreshTasks])
+
+  const handleCreateProject = async (name: string) => {
     try {
-      await createTask(title, startDate, duration, parentId)
-      await refresh()
+      await createProject(name)
+      await refreshProjects()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create project')
+    }
+  }
+
+  const handleDeleteProject = async (id: string) => {
+    try {
+      await deleteProject(id)
+      if (currentProject?.id === id) setCurrentProject(null)
+      await refreshProjects()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete project')
+    }
+  }
+
+  const handleCreateTask = async (
+    title: string,
+    startDate: string | null,
+    duration: number,
+    parentId: string | null,
+    details: string
+  ) => {
+    if (!currentProject) return
+    try {
+      await createTask(currentProject.id, title, startDate, duration, parentId, [], details)
+      await refreshTasks()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create task')
     }
@@ -38,11 +106,11 @@ export default function App() {
 
   const handleUpdateTask = async (
     id: string,
-    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration'>>
+    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details'>>
   ) => {
     try {
       await updateTask(id, updates)
-      await refresh()
+      await refreshTasks()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to update task')
     }
@@ -51,16 +119,22 @@ export default function App() {
   const handleDeleteTask = async (id: string) => {
     try {
       await deleteTask(id)
-      await refresh()
+      await refreshTasks()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete task')
     }
   }
 
-  const handleAddChild = async (parentId: string, title: string, startDate: string, duration: number) => {
+  const handleAddChild = async (
+    parentId: string,
+    title: string,
+    startDate: string | null,
+    duration: number
+  ) => {
+    if (!currentProject) return
     try {
-      await addChildTask(parentId, title, startDate, duration)
-      await refresh()
+      await addChildTask(currentProject.id, parentId, title, startDate, duration)
+      await refreshTasks()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to add child task')
     }
@@ -69,59 +143,106 @@ export default function App() {
   const handleAddDependency = async (taskId: string, dependsOnTaskId: string) => {
     try {
       await addDependency(taskId, dependsOnTaskId)
-      await refresh()
+      await refreshTasks()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to add dependency')
+    }
+  }
+
+  const handleCreateTaskAndAddDependency = async (
+    taskId: string,
+    title: string,
+    startDate: string | null,
+    duration: number,
+    parentId: string | null,
+    details: string
+  ) => {
+    if (!currentProject) return
+    try {
+      const newTask = await createTask(currentProject.id, title, startDate, duration, parentId, [], details)
+      await addDependency(taskId, newTask.id)
+      await refreshTasks()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create task or add dependency')
     }
   }
 
   const handleRemoveDependency = async (taskId: string, dependsOnTaskId: string) => {
     try {
       await removeDependency(taskId, dependsOnTaskId)
-      await refresh()
+      await refreshTasks()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to remove dependency')
     }
   }
 
-  return (
-    <div className="app">
-      <header className="app-header">
-        <h1 className="app-title">TEU</h1>
-        <p className="app-subtitle">Project management</p>
-        <nav className="app-nav">
-          <button
-            className={view === 'list' ? 'active' : ''}
-            onClick={() => setView('list')}
-          >
-            List
-          </button>
-          <button
-            className={view === 'timeline' ? 'active' : ''}
-            onClick={() => setView('timeline')}
-          >
-            Timeline
-          </button>
-          <button
-            className={view === 'gantt' ? 'active' : ''}
-            onClick={() => setView('gantt')}
-          >
-            Gantt
-          </button>
-        </nav>
-      </header>
+  const showProjectList = currentProject === null
 
-      <main className="app-main">
+  return (
+    <Layout className="app">
+      <Header className="app-header">
+        <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Space>
+            {currentProject && (
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => setCurrentProject(null)}
+                style={{ color: 'rgba(255,255,255,0.85)' }}
+              >
+                Projects
+              </Button>
+            )}
+            <span className="app-title">TEU</span>
+            <span className="app-subtitle">
+              {currentProject ? currentProject.name : 'Project management'}
+            </span>
+          </Space>
+          {currentProject && (
+            <Segmented
+              value={view}
+              onChange={(v) => setView(v as ViewMode)}
+              options={[
+                { label: 'List', value: 'list' },
+                { label: 'Timeline', value: 'timeline' },
+                { label: 'Gantt', value: 'gantt' },
+                { label: 'Dependencies', value: 'dependencies' },
+              ]}
+            />
+          )}
+        </Space>
+      </Header>
+
+      <Content className="app-main">
         {error && (
-          <div className="app-error" role="alert">
-            {error}
-            <button type="button" onClick={() => setError(null)} aria-label="Dismiss">×</button>
-          </div>
+          <Alert
+            message={error}
+            type="error"
+            closable
+            onClose={() => setError(null)}
+            style={{ marginBottom: 16 }}
+          />
         )}
-        {loading ? (
-          <p className="app-loading">Loading tasks…</p>
+
+        {showProjectList ? (
+          loading ? (
+            <div style={{ textAlign: 'center', padding: 48 }}>
+              <Spin size="large" tip="Loading projects…" />
+            </div>
+          ) : (
+            <ProjectList
+              projects={projects}
+              onCreateProject={handleCreateProject}
+              onDeleteProject={handleDeleteProject}
+              onEnterProject={(p) => setCurrentProject(p)}
+            />
+          )
+        ) : loading ? (
+          <div style={{ textAlign: 'center', padding: 48 }}>
+            <Spin size="large" tip="Loading tasks…" />
+          </div>
         ) : view === 'list' ? (
-          <>
+          <section className="task-view">
             <CreateTaskForm onCreate={handleCreateTask} tasks={tasks} />
             <TaskList
               tasks={tasks}
@@ -129,15 +250,69 @@ export default function App() {
               onDelete={handleDeleteTask}
               onAddChild={handleAddChild}
               onAddDependency={handleAddDependency}
+              onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
               onRemoveDependency={handleRemoveDependency}
+              onOpenTask={setSelectedTaskId}
+            />
+          </section>
+        ) : view === 'timeline' ? (
+          <>
+            <div className="view-toolbar">
+              <Space>
+                <span className="view-toolbar-label">Time unit:</span>
+                <Segmented
+                  value={timeUnit}
+                  onChange={(v) => setTimeUnit(v as TimeUnit)}
+                  options={(['day', 'week', 'month', 'quarter'] as const).map((u) => ({
+                    label: u.charAt(0).toUpperCase() + u.slice(1),
+                    value: u,
+                  }))}
+                />
+              </Space>
+            </div>
+            <TimelineView tasks={tasks} timeUnit={timeUnit} onUpdateTask={handleUpdateTask} />
+          </>
+        ) : view === 'dependencies' ? (
+          <DependencyView tasks={tasks} onOpenTask={setSelectedTaskId} />
+        ) : (
+          <>
+            <div className="view-toolbar">
+              <Space>
+                <span className="view-toolbar-label">Time unit:</span>
+                <Segmented
+                  value={timeUnit}
+                  onChange={(v) => setTimeUnit(v as TimeUnit)}
+                  options={(['day', 'week', 'month', 'quarter'] as const).map((u) => ({
+                    label: u.charAt(0).toUpperCase() + u.slice(1),
+                    value: u,
+                  }))}
+                />
+              </Space>
+            </div>
+            <GanttView
+              tasks={tasks}
+              timeUnit={timeUnit}
+              onUpdateTask={handleUpdateTask}
+              onOpenTask={setSelectedTaskId}
+              onSwitchToView={setView}
             />
           </>
-        ) : view === 'timeline' ? (
-          <TimelineView tasks={tasks} />
-        ) : (
-          <GanttView tasks={tasks} onUpdateTask={handleUpdateTask} />
         )}
-      </main>
-    </div>
+      </Content>
+      {currentProject && (
+        <TaskDetailDrawer
+          taskId={selectedTaskId}
+          tasks={tasks}
+          onClose={() => setSelectedTaskId(null)}
+          onUpdate={handleUpdateTask}
+          onDelete={handleDeleteTask}
+          onAddChild={handleAddChild}
+          onAddDependency={handleAddDependency}
+          onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
+          onRemoveDependency={handleRemoveDependency}
+          onOpenTask={setSelectedTaskId}
+        />
+      )}
+    </Layout>
   )
 }
