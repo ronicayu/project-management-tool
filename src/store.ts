@@ -71,9 +71,13 @@ export async function updateTask(
   id: string,
   updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'dependencyIds' | 'details' | 'tags'>>
 ): Promise<Task | null> {
+  const payload = { ...updates }
+  if (payload.duration !== undefined && payload.duration < 1) {
+    payload.duration = 1
+  }
   return request<Task | null>(`/tasks/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify(updates),
+    body: JSON.stringify(payload),
   })
 }
 

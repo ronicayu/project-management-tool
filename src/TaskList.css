@@ -35,6 +35,7 @@
 .tl-col-status { width: 100px; }
 .tl-col-start  { width: 120px; }
 .tl-col-dur    { width: 80px; }
+.tl-col-end    { width: 120px; }
 .tl-col-deps   { flex: 1; min-width: 100px; }
 
 /* ── Task Body (scrollable) ───────────────────────────────── */
@@ -145,6 +146,30 @@
 .tl-dot-active     { background: #f59e0b; }
 .tl-dot-not-started { background: #666680; }
 
+/* Inline edit controls */
+.tl-inline-input,
+.tl-inline-input-number {
+  width: 100%;
+  min-width: 0;
+}
+.tl-inline-input {
+  max-width: 220px;
+}
+.tl-inline-select {
+  min-width: 100px;
+}
+.tl-inline-date {
+  width: 100%;
+  min-width: 0;
+  max-width: 120px;
+}
+.tl-editable {
+  cursor: pointer;
+}
+.tl-editable:hover {
+  text-decoration: underline;
+}
+
 .tl-task-name {
   font-family: var(--font-heading);
   font-size: 13px;
@@ -214,6 +239,7 @@
 /* ── Other Columns ────────────────────────────────────────── */
 .tl-start-col,
 .tl-dur-col,
+.tl-end-col,
 .tl-deps-col {
   display: flex;
   align-items: center;
@@ -222,6 +248,7 @@
 
 .tl-start-col { width: 120px; }
 .tl-dur-col   { width: 80px; }
+.tl-end-col   { width: 120px; }
 .tl-deps-col  { flex: 1; min-width: 100px; }
 
 .tl-cell-text {

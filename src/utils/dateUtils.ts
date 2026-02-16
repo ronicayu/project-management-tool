@@ -26,6 +26,20 @@ export function getEndDate(startDate: string, durationDays: number): string {
   return addDays(parseISO(startDate), durationDays).toISOString().slice(0, 10)
 }
 
+/** Last day of task (inclusive). Returns ISO date string or null if no startDate. Never returns a date before start. */
+export function getTaskEndDate(task: { startDate: string | null; duration: number }): string | null {
+  if (!task.startDate) return null
+  const safeDuration = Math.max(1, task.duration)
+  const lastDay = addDays(parseISO(task.startDate), safeDuration - 1)
+  return lastDay.toISOString().slice(0, 10)
+}
+
+/** Compute duration (days) from start and end (inclusive). Min 1. */
+export function durationFromEndDate(startDate: string, endDate: string): number {
+  const days = differenceInDays(parseISO(endDate), parseISO(startDate)) + 1
+  return Math.max(1, days)
+}
+
 /** Effective start and duration for display: parents span from earliest child start to latest child end. */
 export function getEffectiveTaskBounds(
   tasks: Task[],

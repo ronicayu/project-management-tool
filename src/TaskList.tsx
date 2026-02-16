@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback } from 'react'
-import { Modal, Space, Button } from 'antd'
+import { Modal, Space, Button, Input, InputNumber, DatePicker, Select } from 'antd'
+import dayjs from 'dayjs'
 import type { Task } from './types'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, addDays, startOfDay } from 'date-fns'
+import { getTaskEndDate, durationFromEndDate } from './utils/dateUtils'
 import './TaskList.css'
 
 // ── Utilities ───────────────────────────────────────────────
@@ -78,6 +80,27 @@ function dependsOnTransitive(tasks: Task[], taskId: string, targetId: string): b
   return task.dependencyIds.some((d) => dependsOnTransitive(tasks, d, targetId))
 }
 
+/** Return updates to apply so task has the given status (Planned / In Progress / Done). */
+function getUpdatesForStatus(
+  task: Task,
+  status: 'not_started' | 'in_progress' | 'done'
+): Partial<Pick<Task, 'startDate' | 'duration'>> {
+  const today = startOfDay(new Date())
+  if (status === 'not_started') {
+    return { startDate: null }
+  }
+  if (status === 'done') {
+    const start = addDays(today, -(task.duration - 1))
+    return { startDate: start.toISOString().slice(0, 10) }
+  }
+  if (status === 'in_progress') {
+    const start = task.startDate ? parseISO(task.startDate) : today
+    const startStr = start <= today ? (start.toISOString().slice(0, 10)) : today.toISOString().slice(0, 10)
+    return { startDate: startStr }
+  }
+  return {}
+}
+
 // ── Status labels/classes ────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
@@ -152,6 +175,14 @@ export function TaskList({
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [pendingDrop, setPendingDrop] = useState<PendingDrop | null>(null)
 
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null)
+  const [titleDraft, setTitleDraft] = useState('')
+  const [editingStartDateId, setEditingStartDateId] = useState<string | null>(null)
+  const [editingDurationId, setEditingDurationId] = useState<string | null>(null)
+  const [durationDraft, setDurationDraft] = useState(1)
+  const [editingStatusId, setEditingStatusId] = useState<string | null>(null)
+  const [editingEndDateId, setEditingEndDateId] = useState<string | null>(null)
+
   const depOrder = useMemo(() => getDependencyOrder(tasks), [tasks])
 
   const getChildrenOrdered = useCallback(
@@ -192,13 +223,23 @@ export function TaskList({
   const formatStart = (d: string | null) => {
     if (!d) return '—'
     try {
-      return format(parseISO(d), 'MMM d')
+      return format(parseISO(d), 'MMM d, yyyy')
     } catch {
       return '—'
     }
   }
 
   const formatDuration = (d: number) => `${d} day${d !== 1 ? 's' : ''}`
+
+  const formatEnd = (task: Task) => {
+    const end = getTaskEndDate(task)
+    if (!end) return '—'
+    try {
+      return format(parseISO(end), 'MMM d, yyyy')
+    } catch {
+      return '—'
+    }
+  }
 
   const getDeps = (task: Task) => {
     return task.dependencyIds
@@ -252,6 +293,53 @@ export function TaskList({
       !tasks.find((t) => t.id === pendingDrop.dragKey)?.dependencyIds.includes(pendingDrop.dropKey)
     : false
 
+  const handleSaveTitle = useCallback(
+    (taskId: string) => {
+      const trimmed = titleDraft.trim()
+      if (trimmed) {
+        const task = tasks.find((t) => t.id === taskId)
+        if (task && trimmed !== task.title) onUpdate(taskId, { title: trimmed })
+      }
+      setEditingTitleId(null)
+    },
+    [titleDraft, tasks, onUpdate]
+  )
+
+  const handleSaveDuration = useCallback(
+    (taskId: string) => {
+      const d = Math.max(1, Math.round(durationDraft))
+      const task = tasks.find((t) => t.id === taskId)
+      if (task && d !== task.duration) onUpdate(taskId, { duration: d })
+      setEditingDurationId(null)
+    },
+    [durationDraft, tasks, onUpdate]
+  )
+
+  const handleStatusChange = useCallback(
+    (taskId: string, status: 'not_started' | 'in_progress' | 'done') => {
+      const task = tasks.find((t) => t.id === taskId)
+      if (!task) return
+      const updates = getUpdatesForStatus(task, status)
+      if (Object.keys(updates).length > 0) onUpdate(taskId, updates)
+    },
+    [tasks, onUpdate]
+  )
+
+  const handleEndDateChange = useCallback(
+    (taskId: string, endDateStr: string) => {
+      const task = tasks.find((t) => t.id === taskId)
+      if (!task) return
+      if (task.startDate) {
+        const newDuration = durationFromEndDate(task.startDate, endDateStr)
+        if (newDuration !== task.duration) onUpdate(taskId, { duration: newDuration })
+      } else {
+        onUpdate(taskId, { startDate: endDateStr, duration: 1 })
+      }
+      setEditingEndDateId(null)
+    },
+    [tasks, onUpdate]
+  )
+
   if (tasks.length === 0) {
     return (
       <div className="tl-panel">
@@ -280,6 +368,9 @@ export function TaskList({
         </div>
         <div className="tl-col tl-col-dur">
           <span className="tl-col-label">Duration</span>
+        </div>
+        <div className="tl-col tl-col-end">
+          <span className="tl-col-label">End Date</span>
         </div>
         <div className="tl-col tl-col-deps">
           <span className="tl-col-label">Dependencies</span>
@@ -339,13 +430,37 @@ export function TaskList({
                   className={`tl-status-dot ${hasChildren ? 'parent-dot' : 'child-dot'} ${STATUS_DOT_CLASS[status]}`}
                 />
 
-                <span
-                  className={`tl-task-name ${
-                    hasChildren ? 'parent-name' : isSelected ? 'selected-name' : 'child-name'
-                  }`}
-                >
-                  {task.title}
-                </span>
+                {editingTitleId === task.id ? (
+                  <Input
+                    className="tl-inline-input"
+                    autoFocus
+                    value={titleDraft}
+                    onChange={(e) => setTitleDraft(e.target.value)}
+                    onBlur={() => handleSaveTitle(task.id)}
+                    onKeyDown={(e) => {
+                      e.stopPropagation()
+                      if (e.key === 'Enter') handleSaveTitle(task.id)
+                      if (e.key === 'Escape') {
+                        setTitleDraft(task.title)
+                        setEditingTitleId(null)
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <span
+                    className={`tl-task-name ${
+                      hasChildren ? 'parent-name' : isSelected ? 'selected-name' : 'child-name'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setEditingTitleId(task.id)
+                      setTitleDraft(task.title)
+                    }}
+                  >
+                    {task.title}
+                  </span>
+                )}
 
                 {firstTag && hasChildren && (
                   <span className="tl-row-tag tag-accent">{firstTag}</span>
@@ -356,20 +471,126 @@ export function TaskList({
               </div>
 
               {/* Status Badge Column */}
-              <div className="tl-status-col">
-                <span className={`tl-status-badge ${STATUS_BADGE_CLASS[status]}`}>
-                  {STATUS_LABEL[status]}
-                </span>
+              <div className="tl-status-col" onClick={(e) => e.stopPropagation()}>
+                {editingStatusId === task.id ? (
+                  <Select
+                    className="tl-inline-select"
+                    size="small"
+                    value={(status === 'active' ? 'in_progress' : status) as 'not_started' | 'in_progress' | 'done'}
+                    open
+                    autoFocus
+                    options={[
+                      { value: 'not_started', label: STATUS_LABEL.not_started },
+                      { value: 'in_progress', label: STATUS_LABEL.in_progress },
+                      { value: 'done', label: STATUS_LABEL.done },
+                    ]}
+                    onChange={(value: 'not_started' | 'in_progress' | 'done') => {
+                      handleStatusChange(task.id, value)
+                      setEditingStatusId(null)
+                    }}
+                    onBlur={() => setEditingStatusId(null)}
+                  />
+                ) : (
+                  <span
+                    className={`tl-status-badge ${STATUS_BADGE_CLASS[status]} tl-editable`}
+                    onClick={() => setEditingStatusId(task.id)}
+                  >
+                    {STATUS_LABEL[status]}
+                  </span>
+                )}
               </div>
 
               {/* Start Date Column */}
-              <div className="tl-start-col">
-                <span className="tl-cell-text">{formatStart(task.startDate)}</span>
+              <div
+                className="tl-start-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {editingStartDateId === task.id ? (
+                  <DatePicker
+                    className="tl-inline-date"
+                    size="small"
+                    format="YYYY-MM-DD"
+                    value={task.startDate ? dayjs(task.startDate) : null}
+                    onChange={(_, dateStr) => {
+                      const str = typeof dateStr === 'string' ? dateStr : Array.isArray(dateStr) ? dateStr[0] : undefined
+                      if (str) onUpdate(task.id, { startDate: str })
+                      setEditingStartDateId(null)
+                    }}
+                    onOpenChange={(open) => {
+                      if (!open) setEditingStartDateId(null)
+                    }}
+                    open
+                    autoFocus
+                  />
+                ) : (
+                  <span
+                    className="tl-cell-text tl-editable"
+                    onClick={() => setEditingStartDateId(task.id)}
+                  >
+                    {formatStart(task.startDate)}
+                  </span>
+                )}
               </div>
 
               {/* Duration Column */}
-              <div className="tl-dur-col">
-                <span className="tl-cell-text">{formatDuration(task.duration)}</span>
+              <div className="tl-dur-col" onClick={(e) => e.stopPropagation()}>
+                {editingDurationId === task.id ? (
+                  <InputNumber
+                    className="tl-inline-input-number"
+                    autoFocus
+                    size="small"
+                    min={1}
+                    value={durationDraft}
+                    onChange={(v) => setDurationDraft(v ?? 1)}
+                    onBlur={() => handleSaveDuration(task.id)}
+                    onKeyDown={(e) => {
+                      e.stopPropagation()
+                      if (e.key === 'Enter') handleSaveDuration(task.id)
+                      if (e.key === 'Escape') {
+                        setDurationDraft(task.duration)
+                        setEditingDurationId(null)
+                      }
+                    }}
+                  />
+                ) : (
+                  <span
+                    className="tl-cell-text tl-editable"
+                    onClick={() => {
+                      setEditingDurationId(task.id)
+                      setDurationDraft(task.duration)
+                    }}
+                  >
+                    {formatDuration(task.duration)}
+                  </span>
+                )}
+              </div>
+
+              {/* End Date Column */}
+              <div className="tl-end-col" onClick={(e) => e.stopPropagation()}>
+                {editingEndDateId === task.id ? (
+                  <DatePicker
+                    className="tl-inline-date"
+                    size="small"
+                    format="YYYY-MM-DD"
+                    value={getTaskEndDate(task) ? dayjs(getTaskEndDate(task)!) : null}
+                    onChange={(_, dateStr) => {
+                      const str = typeof dateStr === 'string' ? dateStr : Array.isArray(dateStr) ? dateStr[0] : undefined
+                      if (str) handleEndDateChange(task.id, str)
+                    }}
+                    onOpenChange={(open) => {
+                      if (!open) setEditingEndDateId(null)
+                    }}
+                    open
+                    autoFocus
+                  />
+                ) : (
+                  <span
+                    className="tl-cell-text tl-editable"
+                    onClick={() => setEditingEndDateId(task.id)}
+                  >
+                    {formatEnd(task)}
+                  </span>
+                )}
               </div>
 
               {/* Dependencies Column */}
