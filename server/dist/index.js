@@ -43,6 +43,16 @@ app.get('/api/projects', async (_req, res) => {
         res.status(500).json({ error: 'Failed to load projects' });
     }
 });
+app.get('/api/projects/stats', async (_req, res) => {
+    try {
+        const stats = await db.getProjectStats();
+        res.json(stats);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to load project stats' });
+    }
+});
 app.post('/api/projects', async (req, res) => {
     try {
         const { name } = req.body;
@@ -100,11 +110,11 @@ app.get('/api/projects/:projectId/tasks', async (req, res) => {
 app.post('/api/projects/:projectId/tasks', async (req, res) => {
     try {
         const { projectId } = req.params;
-        const { title, startDate, duration, parentId = null, dependencyIds = [], details = '' } = req.body;
+        const { title, startDate, duration, parentId = null, dependencyIds = [], details = '', tags = [] } = req.body;
         if (!title || duration == null) {
             return res.status(400).json({ error: 'title and duration are required' });
         }
-        const task = await db.createTaskInProject(projectId, String(title), startDate != null && String(startDate).trim() !== '' ? String(startDate) : null, Number(duration), parentId ?? null, Array.isArray(dependencyIds) ? dependencyIds : [], String(details ?? ''));
+        const task = await db.createTaskInProject(projectId, String(title), startDate != null && String(startDate).trim() !== '' ? String(startDate) : null, Number(duration), parentId ?? null, Array.isArray(dependencyIds) ? dependencyIds : [], String(details ?? ''), Array.isArray(tags) ? tags.map(String) : []);
         res.status(201).json(task);
     }
     catch (err) {
@@ -124,6 +134,7 @@ app.patch('/api/tasks/:id', async (req, res) => {
             parentId: updates.parentId,
             dependencyIds: updates.dependencyIds,
             details: updates.details,
+            tags: updates.tags,
         });
         if (!task)
             return res.status(404).json({ error: 'Task not found' });

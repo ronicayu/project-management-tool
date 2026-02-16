@@ -95,9 +95,106 @@ function getDependentIds(tasks: Task[], taskId: string): Set<string> {
   return out
 }
 
+/** Groups of task ids by parentId in BFS order (root first, then children of root, etc.). */
+function getGroupsByParent(tasks: Task[]): { parentId: string | null; taskIds: string[] }[] {
+  const byParent = new Map<string | null, string[]>()
+  tasks.forEach((t) => {
+    const p = t.parentId ?? null
+    if (!byParent.has(p)) byParent.set(p, [])
+    byParent.get(p)!.push(t.id)
+  })
+  const groups: { parentId: string | null; taskIds: string[] }[] = []
+  const queue: (string | null)[] = [null]
+  const seen = new Set<string | null>()
+  while (queue.length > 0) {
+    const p = queue.shift()!
+    if (seen.has(p)) continue
+    seen.add(p)
+    const ids = byParent.get(p) ?? []
+    if (ids.length > 0) {
+      ids.sort()
+      groups.push({ parentId: p, taskIds: ids })
+      ids.forEach((id) => queue.push(id))
+    } else if (p === null) {
+      // No root-level tasks: still show other groups (e.g. "Children of X")
+      for (const key of byParent.keys()) {
+        if (key !== null) queue.push(key)
+      }
+    }
+  }
+  return groups
+}
+
+const LAYOUT_LEVEL = 'level'
+const LAYOUT_PARENT = 'parent'
+
+interface ParentGroupBoxProps {
+  group: { parentId: string | null; taskIds: string[] }
+  tasks: Task[]
+  focusedTaskId: string | null
+  focusedSubgraphIds: Set<string> | null
+  onOpenTask?: (id: string) => void
+  setFocusedTaskId: (id: string | null) => void
+}
+
+function ParentGroupBox(props: ParentGroupBoxProps) {
+  const { group, tasks, focusedTaskId, focusedSubgraphIds, onOpenTask, setFocusedTaskId } = props
+  const childTasks = group.taskIds
+    .map((id) => tasks.find((t) => t.id === id))
+    .filter(Boolean) as Task[]
+  const parentTask = group.parentId ? (tasks.find((t) => t.id === group.parentId) ?? null) : null
+  return (
+    <div className="dependency-view-parent-box">
+      <div className="dependency-view-parent-box-header">
+        {parentTask ? (
+          <button
+            type="button"
+            className="dependency-view-parent-header-btn"
+            onClick={() => onOpenTask?.(parentTask.id)}
+          >
+            <span className="dependency-view-parent-header-title">{parentTask.title}</span>
+            <span className="dependency-view-parent-header-meta">
+              {parentTask.startDate ? format(parseISO(parentTask.startDate), 'MMM d') : 'No date'} · {parentTask.duration}d
+              {childTasks.length > 0 && ` · ${childTasks.length} child${childTasks.length === 1 ? '' : 'ren'}`}
+            </span>
+          </button>
+        ) : (
+          <span className="dependency-view-parent-header-title">Root</span>
+        )}
+      </div>
+      <div className="dependency-view-parent-box-children">
+        {childTasks.map((task) => {
+          const dimmed = focusedTaskId && focusedTaskId !== task.id && focusedSubgraphIds && !focusedSubgraphIds.has(task.id)
+          return (
+            <button
+              key={task.id}
+              type="button"
+              className={`dependency-view-node dependency-view-node--in-panel ${dimmed ? 'dependency-view-node--dimmed' : ''} ${focusedTaskId === task.id ? 'dependency-view-node--focus-seed' : ''}`}
+              onClick={() => onOpenTask?.(task.id)}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                setFocusedTaskId(task.id)
+              }}
+            >
+              <div className="dependency-view-node-title">{task.title}</div>
+              <div className="dependency-view-node-meta">
+                {task.startDate ? format(parseISO(task.startDate), 'MMM d') : 'No date'} · {task.duration}d
+                {task.dependencyIds.length > 0 && (
+                  <span className="dependency-view-node-deps"> · ← {task.dependencyIds.length}</span>
+                )}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function DependencyView({ tasks: tasksProp, onOpenTask }: DependencyViewProps) {
   const tasks = Array.isArray(tasksProp) ? tasksProp : []
   const [viewMode, setViewMode] = useState<'graph' | 'list'>('graph')
+  const [layoutMode, setLayoutMode] = useState<'level' | 'parent'>(LAYOUT_PARENT)
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(100)
   const [fitScale, setFitScale] = useState<number | null>(null)
@@ -269,6 +366,7 @@ export function DependencyView({ tasks: tasksProp, onOpenTask }: DependencyViewP
   }
 
   const hasEdges = edges.length > 0
+  const groups = useMemo(() => getGroupsByParent(tasks), [tasks])
 
   const sortedTasksForList = useMemo(() => {
     return [...tasks].sort((a, b) => {
@@ -289,6 +387,13 @@ export function DependencyView({ tasks: tasksProp, onOpenTask }: DependencyViewP
             value={viewMode}
             onChange={(v) => setViewMode(v === 'list' ? 'list' : 'graph')}
           />
+          {viewMode === 'graph' && (
+            <Segmented
+              options={[{ label: 'By level', value: LAYOUT_LEVEL }, { label: 'By parent', value: LAYOUT_PARENT }]}
+              value={layoutMode}
+              onChange={(v) => setLayoutMode(v === LAYOUT_PARENT ? LAYOUT_PARENT : LAYOUT_LEVEL)}
+            />
+          )}
           {viewMode === 'graph' && (
             <Select
               placeholder="Focus on a task…"
@@ -377,6 +482,22 @@ export function DependencyView({ tasks: tasksProp, onOpenTask }: DependencyViewP
               },
             ]}
           />
+        </div>
+      ) : viewMode === 'graph' && layoutMode === LAYOUT_PARENT ? (
+        <div className="dependency-view-graph-wrap dependency-view-graph-wrap--panels" style={{ minHeight: 400 }}>
+          <div className="dependency-view-panels-body">
+            {groups.map((g) => (
+              <ParentGroupBox
+                key={g.parentId ?? 'root'}
+                group={g}
+                tasks={tasks}
+                focusedTaskId={focusedTaskId}
+                focusedSubgraphIds={focusedSubgraphIds}
+                onOpenTask={onOpenTask}
+                setFocusedTaskId={setFocusedTaskId}
+              />
+            ))}
+          </div>
         </div>
       ) : !hasEdges ? (
         <div className="dependency-view-empty-block">

@@ -4716,17 +4716,6 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "ZvoVh",
-                          "x": 201,
-                          "y": 153,
-                          "name": "Dep-Research-Design-V",
-                          "flipX": true,
-                          "width": 1,
-                          "height": 18,
-                          "fill": "#8A8AA080"
-                        },
-                        {
-                          "type": "frame",
                           "id": "3qQ8K",
                           "x": 140,
                           "y": 0,
@@ -4961,16 +4950,6 @@
                               "fontWeight": "semibold"
                             }
                           ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "5KRXp",
-                          "x": 286,
-                          "y": 22,
-                          "name": "Dep-Research-Design-V",
-                          "width": 1,
-                          "height": 131,
-                          "fill": "#8A8AA080"
                         },
                         {
                           "type": "frame",

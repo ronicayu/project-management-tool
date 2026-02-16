@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
-import { Popconfirm } from 'antd'
+import { Popconfirm, Modal, Input, InputNumber, DatePicker, Button, Space } from 'antd'
+import dayjs from 'dayjs'
 import type { Task } from './types'
 import { format, parseISO } from 'date-fns'
 import './TaskDetailDrawer.css'
+
+function dependsOnTransitive(tasks: Task[], taskId: string, targetId: string): boolean {
+  const t = tasks.find((x) => x.id === taskId)
+  if (!t) return false
+  if (t.dependencyIds.includes(targetId)) return true
+  return t.dependencyIds.some((d) => dependsOnTransitive(tasks, d, targetId))
+}
 
 function getTaskStatus(task: Task): 'done' | 'in_progress' | 'not_started' {
   if (!task.startDate) return 'not_started'
@@ -64,6 +72,9 @@ export function TaskDetailDrawer({
   onClose,
   onUpdate,
   onDelete,
+  onAddChild,
+  onAddDependency,
+  onCreateTaskAndAddDependency,
   onRemoveDependency,
   onOpenTask,
 }: TaskDetailDrawerProps) {
@@ -74,6 +85,18 @@ export function TaskDetailDrawer({
   const [notesDraft, setNotesDraft] = useState('')
   const titleInputRef = useRef<HTMLInputElement>(null)
   const notesInputRef = useRef<HTMLTextAreaElement>(null)
+
+  const [showAddChildModal, setShowAddChildModal] = useState(false)
+  const [addChildTitle, setAddChildTitle] = useState('')
+  const [addChildStart, setAddChildStart] = useState<string | null>(null)
+  const [addChildDuration, setAddChildDuration] = useState(1)
+
+  const [showAddDepModal, setShowAddDepModal] = useState(false)
+  const [showCreateAndAddDepModal, setShowCreateAndAddDepModal] = useState(false)
+  const [createDepTitle, setCreateDepTitle] = useState('')
+  const [createDepStart, setCreateDepStart] = useState<string | null>(null)
+  const [createDepDuration, setCreateDepDuration] = useState(1)
+  const [createDepDetails, setCreateDepDetails] = useState('')
 
   useEffect(() => {
     if (task) {
@@ -101,10 +124,17 @@ export function TaskDetailDrawer({
 
   const status = getTaskStatus(task)
   const parent = task.parentId ? tasks.find((t) => t.id === task.parentId) : null
+  const children = tasks.filter((t) => t.parentId === task.id)
   const depTasks = task.dependencyIds
     .map((id) => tasks.find((t) => t.id === id))
     .filter(Boolean) as Task[]
   const tags = task.tags ?? []
+  const canAddAsDependency = tasks.filter(
+    (t) =>
+      t.id !== task.id &&
+      !task.dependencyIds.includes(t.id) &&
+      !dependsOnTransitive(tasks, t.id, task.id)
+  )
 
   const handleSaveTitle = () => {
     const trimmed = titleDraft.trim()
@@ -120,6 +150,43 @@ export function TaskDetailDrawer({
       onUpdate(task.id, { details: trimmed })
     }
     setEditingNotes(false)
+  }
+
+  const openAddChildModal = () => {
+    setAddChildTitle('')
+    setAddChildStart(null)
+    setAddChildDuration(1)
+    setShowAddChildModal(true)
+  }
+
+  const submitAddChild = () => {
+    const title = addChildTitle.trim()
+    if (!title) return
+    onAddChild(task.id, title, addChildStart, addChildDuration)
+    setShowAddChildModal(false)
+  }
+
+  const openCreateAndAddDepModal = () => {
+    setShowAddDepModal(false)
+    setCreateDepTitle('')
+    setCreateDepStart(null)
+    setCreateDepDuration(1)
+    setCreateDepDetails('')
+    setShowCreateAndAddDepModal(true)
+  }
+
+  const submitCreateAndAddDep = () => {
+    const title = createDepTitle.trim()
+    if (!title) return
+    onCreateTaskAndAddDependency(
+      task.id,
+      title,
+      createDepStart,
+      createDepDuration,
+      null,
+      createDepDetails
+    )
+    setShowCreateAndAddDepModal(false)
   }
 
   const formatDate = (d: string | null) => {
@@ -196,6 +263,41 @@ export function TaskDetailDrawer({
           </span>
         </div>
 
+        {/* Children */}
+        <div className="td-section">
+          <span className="td-label">Sub-tasks</span>
+          {children.length > 0 ? (
+            <>
+              {children.map((child) => (
+                <div
+                  key={child.id}
+                  className="td-item-row"
+                  onClick={() => onOpenTask(child.id)}
+                >
+                  <div
+                    className="td-item-dot"
+                    style={{ background: STATUS_DOT_COLOR[getTaskStatus(child)] }}
+                  />
+                  <span className="td-item-name">{child.title}</span>
+                  <span className="td-item-arrow">
+                    <span className="material-symbols-rounded">chevron_right</span>
+                  </span>
+                </div>
+              ))}
+            </>
+          ) : (
+            <span className="td-notes-empty">No sub-tasks</span>
+          )}
+          <button
+            type="button"
+            className="td-action-btn secondary"
+            onClick={openAddChildModal}
+          >
+            <span className="material-symbols-rounded">add</span>
+            Add child task
+          </button>
+        </div>
+
         {/* Tags */}
         {tags.length > 0 && (
           <div className="td-section">
@@ -252,6 +354,24 @@ export function TaskDetailDrawer({
           ) : (
             <span className="td-notes-empty">No dependencies</span>
           )}
+          <Space style={{ marginTop: 8 }} wrap>
+            <button
+              type="button"
+              className="td-action-btn secondary"
+              onClick={() => setShowAddDepModal(true)}
+            >
+              <span className="material-symbols-rounded">link</span>
+              Add dependency
+            </button>
+            <button
+              type="button"
+              className="td-action-btn secondary"
+              onClick={openCreateAndAddDepModal}
+            >
+              <span className="material-symbols-rounded">add_link</span>
+              Create & add as dependency
+            </button>
+          </Space>
         </div>
 
         <div className="td-divider" style={{ margin: 0 }} />
@@ -335,6 +455,138 @@ export function TaskDetailDrawer({
           </Popconfirm>
         </div>
       </div>
+
+      {/* Add child modal */}
+      <Modal
+        title="Add child task"
+        open={showAddChildModal}
+        onCancel={() => setShowAddChildModal(false)}
+        onOk={submitAddChild}
+        okText="Create"
+        okButtonProps={{ disabled: !addChildTitle.trim() }}
+        destroyOnClose
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <div>
+            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Title</label>
+            <Input
+              value={addChildTitle}
+              onChange={(e) => setAddChildTitle(e.target.value)}
+              placeholder="Child task title"
+              onPressEnter={submitAddChild}
+            />
+          </div>
+          <div>
+            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Start date (optional)</label>
+            <DatePicker
+              value={addChildStart ? dayjs(addChildStart) : null}
+              onChange={(date) => setAddChildStart(date ? date.format('YYYY-MM-DD') : null)}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Duration (days)</label>
+            <InputNumber
+              min={1}
+              value={addChildDuration}
+              onChange={(v) => setAddChildDuration(v ?? 1)}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </Space>
+      </Modal>
+
+      {/* Add existing task as dependency modal */}
+      <Modal
+        title="Add dependency"
+        open={showAddDepModal}
+        onCancel={() => setShowAddDepModal(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <p style={{ color: 'var(--text-muted)', marginBottom: 12 }}>
+          Choose a task that this task depends on (must complete before this one can start).
+        </p>
+        {canAddAsDependency.length === 0 ? (
+          <span className="td-notes-empty">No other tasks can be added (already added or would create a cycle).</span>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {canAddAsDependency.map((t) => (
+              <div
+                key={t.id}
+                className="td-item-row"
+                onClick={() => {
+                  onAddDependency(task.id, t.id)
+                  setShowAddDepModal(false)
+                }}
+              >
+                <div
+                  className="td-item-dot"
+                  style={{ background: STATUS_DOT_COLOR[getTaskStatus(t)] }}
+                />
+                <span className="td-item-name">{t.title}</span>
+                <span className="td-item-arrow">
+                  <span className="material-symbols-rounded">add</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ marginTop: 16 }}>
+          <Button type="link" onClick={openCreateAndAddDepModal} style={{ padding: 0 }}>
+            Create new task and add as dependency
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Create task and add as dependency modal */}
+      <Modal
+        title="Create task and add as dependency"
+        open={showCreateAndAddDepModal}
+        onCancel={() => setShowCreateAndAddDepModal(false)}
+        onOk={submitCreateAndAddDep}
+        okText="Create & add"
+        okButtonProps={{ disabled: !createDepTitle.trim() }}
+        destroyOnClose
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <div>
+            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Title</label>
+            <Input
+              value={createDepTitle}
+              onChange={(e) => setCreateDepTitle(e.target.value)}
+              placeholder="New task title"
+              onPressEnter={submitCreateAndAddDep}
+            />
+          </div>
+          <div>
+            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Start date (optional)</label>
+            <DatePicker
+              value={createDepStart ? dayjs(createDepStart) : null}
+              onChange={(date) => setCreateDepStart(date ? date.format('YYYY-MM-DD') : null)}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Duration (days)</label>
+            <InputNumber
+              min={1}
+              value={createDepDuration}
+              onChange={(v) => setCreateDepDuration(v ?? 1)}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Details (optional)</label>
+            <Input.TextArea
+              value={createDepDetails}
+              onChange={(e) => setCreateDepDetails(e.target.value)}
+              placeholder="Notes"
+              rows={2}
+            />
+          </div>
+        </Space>
+      </Modal>
     </div>
   )
 }
