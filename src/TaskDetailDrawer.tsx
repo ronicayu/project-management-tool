@@ -1,28 +1,38 @@
-import { useState, useEffect } from 'react'
-import {
-  Drawer,
-  Button,
-  Input,
-  InputNumber,
-  DatePicker,
-  Select,
-  Space,
-  Typography,
-  Popconfirm,
-  List,
-} from 'antd'
-import { PlusOutlined, LinkOutlined, DeleteOutlined } from '@ant-design/icons'
-import dayjs from 'dayjs'
-import type { Task, DurationUnit } from './types'
+import { useState, useEffect, useRef } from 'react'
+import { Popconfirm } from 'antd'
+import type { Task } from './types'
 import { format, parseISO } from 'date-fns'
-import { durationToDays } from './utils/dateUtils'
 import './TaskDetailDrawer.css'
 
-const DURATION_UNITS: { value: DurationUnit; label: string }[] = [
-  { value: 'day', label: 'days' },
-  { value: 'week', label: 'weeks' },
-  { value: 'month', label: 'months' },
-]
+function getTaskStatus(task: Task): 'done' | 'in_progress' | 'not_started' {
+  if (!task.startDate) return 'not_started'
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const start = new Date(task.startDate)
+  const end = new Date(task.startDate)
+  end.setDate(end.getDate() + task.duration)
+  if (end <= today) return 'done'
+  if (start <= today) return 'in_progress'
+  return 'not_started'
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  done: 'Done',
+  in_progress: 'In Progress',
+  not_started: 'Planned',
+}
+
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  done: 'td-badge-done',
+  in_progress: 'td-badge-in-progress',
+  not_started: 'td-badge-not-started',
+}
+
+const STATUS_DOT_COLOR: Record<string, string> = {
+  done: '#22c55e',
+  in_progress: '#3b82f6',
+  not_started: '#666680',
+}
 
 interface TaskDetailDrawerProps {
   taskId: string | null
@@ -54,124 +64,263 @@ export function TaskDetailDrawer({
   onClose,
   onUpdate,
   onDelete,
-  onAddChild,
-  onAddDependency,
-  onCreateTaskAndAddDependency,
   onRemoveDependency,
   onOpenTask,
 }: TaskDetailDrawerProps) {
   const task = tasks.find((t) => t.id === taskId) ?? null
-
-  const [title, setTitle] = useState('')
-  const [startDate, setStartDate] = useState<string | null>(null)
-  const [duration, setDuration] = useState(1)
-  const [details, setDetails] = useState('')
-  const [tagsInput, setTagsInput] = useState('')
-  const [showAddChild, setShowAddChild] = useState(false)
-  const [addChildTitle, setAddChildTitle] = useState('')
-  const [addChildStart, setAddChildStart] = useState('')
-  const [addChildDuration, setAddChildDuration] = useState(1)
-  const [addChildUnit, setAddChildUnit] = useState<DurationUnit>('day')
-  const [showAddDep, setShowAddDep] = useState(false)
-  const [addDepTaskId, setAddDepTaskId] = useState<string | null>(null)
-  const [addDepNewTitle, setAddDepNewTitle] = useState('')
-  const [addDepNewStart, setAddDepNewStart] = useState('')
-  const [addDepNewDuration, setAddDepNewDuration] = useState(1)
-  const [addDepNewUnit, setAddDepNewUnit] = useState<DurationUnit>('day')
-  const [addDepNewDetails, setAddDepNewDetails] = useState('')
-  const [addDepNewTagsInput, setAddDepNewTagsInput] = useState('')
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
+  const [editingNotes, setEditingNotes] = useState(false)
+  const [notesDraft, setNotesDraft] = useState('')
+  const titleInputRef = useRef<HTMLInputElement>(null)
+  const notesInputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (task) {
-      setTitle(task.title)
-      setStartDate(task.startDate)
-      setDuration(task.duration)
-      setDetails(task.details ?? '')
-      setTagsInput((task.tags ?? []).join(', '))
-      setShowAddChild(false)
-      setShowAddDep(false)
+      setEditingTitle(false)
+      setEditingNotes(false)
+      setTitleDraft(task.title)
+      setNotesDraft(task.details ?? '')
     }
-  }, [task])
+  }, [task?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (editingTitle && titleInputRef.current) {
+      titleInputRef.current.focus()
+      titleInputRef.current.select()
+    }
+  }, [editingTitle])
+
+  useEffect(() => {
+    if (editingNotes && notesInputRef.current) {
+      notesInputRef.current.focus()
+    }
+  }, [editingNotes])
 
   if (!task) return null
 
-  const children = tasks.filter((t) => t.parentId === task.id)
+  const status = getTaskStatus(task)
+  const parent = task.parentId ? tasks.find((t) => t.id === task.parentId) : null
   const depTasks = task.dependencyIds
     .map((id) => tasks.find((t) => t.id === id))
     .filter(Boolean) as Task[]
-  const canDependOn = tasks.filter(
-    (t) => t.id !== task.id && !task.dependencyIds.includes(t.id)
-  )
-  const canAddAsChild = tasks.filter(
-    (t) => t.id !== task.id && t.parentId !== task.id
-  )
+  const tags = task.tags ?? []
 
-  const handleSave = () => {
-    const tags = tagsInput.split(',').map((s) => s.trim()).filter(Boolean)
-    onUpdate(task.id, {
-      title: title.trim() || task.title,
-      startDate: startDate?.trim() || null,
-      duration,
-      details: details.trim(),
-      tags,
-    })
+  const handleSaveTitle = () => {
+    const trimmed = titleDraft.trim()
+    if (trimmed && trimmed !== task.title) {
+      onUpdate(task.id, { title: trimmed })
+    }
+    setEditingTitle(false)
   }
 
-  const handleAddChild = () => {
-    if (!addChildTitle.trim()) return
-    onAddChild(
-      task.id,
-      addChildTitle.trim(),
-      addChildStart.trim() || null,
-      durationToDays(addChildDuration, addChildUnit)
-    )
-    setAddChildTitle('')
-    setAddChildStart('')
-    setAddChildDuration(1)
-    setAddChildUnit('day')
-    setShowAddChild(false)
+  const handleSaveNotes = () => {
+    const trimmed = notesDraft.trim()
+    if (trimmed !== (task.details ?? '')) {
+      onUpdate(task.id, { details: trimmed })
+    }
+    setEditingNotes(false)
   }
 
-  const handleAddDepExisting = (depId: string) => {
-    onAddDependency(task.id, depId)
-    setAddDepTaskId(null)
-    setShowAddDep(false)
-  }
-
-  const handleAddDepNew = () => {
-    if (!addDepNewTitle.trim()) return
-    const tags = addDepNewTagsInput.split(',').map((s) => s.trim()).filter(Boolean)
-    onCreateTaskAndAddDependency(
-      task.id,
-      addDepNewTitle.trim(),
-      addDepNewStart.trim() || null,
-      durationToDays(addDepNewDuration, addDepNewUnit),
-      null,
-      addDepNewDetails,
-      tags
-    )
-    setAddDepNewTitle('')
-    setAddDepNewStart('')
-    setAddDepNewDuration(1)
-    setAddDepNewUnit('day')
-    setAddDepNewDetails('')
-    setAddDepNewTagsInput('')
-    setShowAddDep(false)
+  const formatDate = (d: string | null) => {
+    if (!d) return '—'
+    try {
+      return format(parseISO(d), 'MMM d, yyyy')
+    } catch {
+      return '—'
+    }
   }
 
   return (
-    <Drawer
-      title={task.title}
-      placement="right"
-      width={480}
-      open={!!taskId}
-      onClose={onClose}
-      className="task-detail-drawer"
-      footer={
-        <Space>
+    <div className="td-panel">
+      {/* Header */}
+      <div className="td-header">
+        <span className="td-title">Task Details</span>
+        <button className="td-close-btn" onClick={onClose}>
+          <span className="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <div style={{ height: 16, flexShrink: 0 }} />
+      <div className="td-divider" />
+      <div style={{ height: 20, flexShrink: 0 }} />
+
+      {/* Body */}
+      <div className="td-body">
+        {/* Title */}
+        <div className="td-section">
+          <span className="td-label">Title</span>
+          {editingTitle ? (
+            <input
+              ref={titleInputRef}
+              className="td-edit-input"
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onBlur={handleSaveTitle}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTitle()
+                if (e.key === 'Escape') setEditingTitle(false)
+              }}
+            />
+          ) : (
+            <span
+              className="td-value"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setTitleDraft(task.title)
+                setEditingTitle(true)
+              }}
+            >
+              {task.title}
+            </span>
+          )}
+        </div>
+
+        {/* Start Date & Duration */}
+        <div className="td-details-row">
+          <div className="td-detail-col">
+            <span className="td-label">Start Date</span>
+            <span className="td-detail-val">{formatDate(task.startDate)}</span>
+          </div>
+          <div className="td-detail-col">
+            <span className="td-label">Duration</span>
+            <span className="td-detail-val">{task.duration} day{task.duration !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div className="td-section">
+          <span className="td-label">Status</span>
+          <span className={`td-status-badge ${STATUS_BADGE_CLASS[status]}`}>
+            {STATUS_LABEL[status]}
+          </span>
+        </div>
+
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className="td-section">
+            <span className="td-label">Tags</span>
+            <div className="td-tags-row">
+              {tags.map((tag) => (
+                <span key={tag} className="td-tag">{tag}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="td-divider" style={{ margin: 0 }} />
+
+        {/* Dependencies */}
+        <div className="td-section">
+          <span className="td-label">Dependencies</span>
+          {depTasks.length > 0 ? (
+            depTasks.map((dep) => {
+              const depStatus = getTaskStatus(dep)
+              return (
+                <div
+                  key={dep.id}
+                  className="td-item-row"
+                  onClick={() => onOpenTask(dep.id)}
+                >
+                  <div
+                    className="td-item-dot"
+                    style={{ background: STATUS_DOT_COLOR[depStatus] }}
+                  />
+                  <span className="td-item-name">{dep.title}</span>
+                  <Popconfirm
+                    title="Remove dependency?"
+                    onConfirm={(e) => {
+                      e?.stopPropagation()
+                      onRemoveDependency(task.id, dep.id)
+                    }}
+                    onCancel={(e) => e?.stopPropagation()}
+                  >
+                    <button
+                      className="td-item-arrow"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Remove dependency"
+                    >
+                      <span className="material-symbols-rounded">close</span>
+                    </button>
+                  </Popconfirm>
+                  <span className="td-item-arrow">
+                    <span className="material-symbols-rounded">chevron_right</span>
+                  </span>
+                </div>
+              )
+            })
+          ) : (
+            <span className="td-notes-empty">No dependencies</span>
+          )}
+        </div>
+
+        <div className="td-divider" style={{ margin: 0 }} />
+
+        {/* Notes */}
+        <div className="td-section">
+          <span className="td-label">Notes</span>
+          {editingNotes ? (
+            <textarea
+              ref={notesInputRef}
+              className="td-edit-textarea"
+              value={notesDraft}
+              onChange={(e) => setNotesDraft(e.target.value)}
+              onBlur={handleSaveNotes}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setEditingNotes(false)
+              }}
+            />
+          ) : task.details ? (
+            <span
+              className="td-notes-text"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setNotesDraft(task.details ?? '')
+                setEditingNotes(true)
+              }}
+            >
+              {task.details}
+            </span>
+          ) : (
+            <span
+              className="td-notes-empty"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setNotesDraft('')
+                setEditingNotes(true)
+              }}
+            >
+              Click to add notes…
+            </span>
+          )}
+        </div>
+
+        {/* Parent Task */}
+        {parent && (
+          <>
+            <div className="td-divider" style={{ margin: 0 }} />
+            <div className="td-section">
+              <span className="td-label">Parent Task</span>
+              <div
+                className="td-item-row"
+                onClick={() => onOpenTask(parent.id)}
+              >
+                <div
+                  className="td-item-dot"
+                  style={{ background: STATUS_DOT_COLOR[getTaskStatus(parent)] }}
+                />
+                <span className="td-item-name">{parent.title}</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Actions */}
+        <div className="td-divider" style={{ margin: 0 }} />
+        <div className="td-actions">
           <Popconfirm
             title="Delete this task?"
-            description="Sub-tasks will be deleted too. This cannot be undone."
+            description="Sub-tasks will be deleted too."
             onConfirm={() => {
               onDelete(task.id)
               onClose()
@@ -179,252 +328,13 @@ export function TaskDetailDrawer({
             okText="Delete"
             okButtonProps={{ danger: true }}
           >
-            <Button type="text" danger icon={<DeleteOutlined />}>
-              Delete task
-            </Button>
+            <button className="td-action-btn danger">
+              <span className="material-symbols-rounded">delete</span>
+              Delete
+            </button>
           </Popconfirm>
-          <Button type="primary" onClick={handleSave}>
-            Save changes
-          </Button>
-          <Button onClick={onClose}>Close</Button>
-        </Space>
-      }
-    >
-      <div className="task-detail-body">
-        <div className="task-detail-section">
-          <Typography.Text strong>Title</Typography.Text>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Task title"
-            style={{ marginTop: 4 }}
-          />
-        </div>
-
-        <div className="task-detail-section">
-          <Typography.Text strong>Start date</Typography.Text>
-          <DatePicker
-            format="YYYY-MM-DD"
-            value={startDate ? dayjs(startDate) : null}
-            onChange={(date) => setStartDate(date ? date.format('YYYY-MM-DD') : '')}
-            style={{ width: '100%', marginTop: 4 }}
-          />
-        </div>
-
-        <div className="task-detail-section">
-          <Typography.Text strong>Duration (days)</Typography.Text>
-          <InputNumber
-            min={1}
-            value={duration}
-            onChange={(v) => setDuration(v ?? 1)}
-            style={{ width: '100%', marginTop: 4 }}
-          />
-        </div>
-
-        <div className="task-detail-section">
-          <Typography.Text strong>Details</Typography.Text>
-          <Input.TextArea
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            placeholder="Notes…"
-            rows={4}
-            style={{ marginTop: 4 }}
-          />
-        </div>
-
-        <div className="task-detail-section">
-          <Typography.Text strong>Tags</Typography.Text>
-          <Input
-            value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-            placeholder="e.g. change-management, risk (comma-separated)"
-            style={{ marginTop: 4 }}
-          />
-        </div>
-
-        <div className="task-detail-section">
-          <div className="task-detail-section-header">
-            <Typography.Text strong>Dependencies</Typography.Text>
-            <Button
-              type="text"
-              size="small"
-              icon={<LinkOutlined />}
-              onClick={() => setShowAddDep(!showAddDep)}
-            >
-              Add
-            </Button>
-          </div>
-          {depTasks.length > 0 && (
-            <List
-              size="small"
-              dataSource={depTasks}
-              renderItem={(t) => (
-                <List.Item
-                  actions={[
-                    <Button
-                      type="text"
-                      size="small"
-                      onClick={() => onOpenTask(t.id)}
-                    >
-                      Open
-                    </Button>,
-                    <Popconfirm
-                      key="remove"
-                      title="Remove dependency?"
-                      onConfirm={() => onRemoveDependency(task.id, t.id)}
-                    >
-                      <Button type="text" size="small" danger>
-                        Remove
-                      </Button>
-                    </Popconfirm>,
-                  ]}
-                >
-                  <List.Item.Meta
-                    title={t.title}
-                    description={
-                      (t.startDate ? format(parseISO(t.startDate), 'MMM d') : 'No date') + ` · ${t.duration}d`
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-          {showAddDep && (
-            <div className="task-detail-add-form">
-              <Select
-                placeholder="Select existing task…"
-                style={{ width: '100%', marginBottom: 8 }}
-                value={addDepTaskId}
-                onChange={(id) => {
-                  if (id) handleAddDepExisting(id)
-                }}
-                options={canDependOn.map((t) => ({ value: t.id, label: t.title }))}
-              />
-              <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>
-                Or create new:
-              </Typography.Text>
-              <Space direction="vertical" style={{ width: '100%' }} size="small">
-                <Input
-                  placeholder="New task title"
-                  value={addDepNewTitle}
-                  onChange={(e) => setAddDepNewTitle(e.target.value)}
-                />
-                <DatePicker
-                  format="YYYY-MM-DD"
-                  value={addDepNewStart ? dayjs(addDepNewStart) : null}
-                  onChange={(date) => setAddDepNewStart(date ? date.format('YYYY-MM-DD') : '')}
-                  style={{ width: '100%' }}
-                />
-                <Space>
-                  <InputNumber
-                    min={1}
-                    value={addDepNewDuration}
-                    onChange={(v) => setAddDepNewDuration(v ?? 1)}
-                    style={{ width: 80 }}
-                  />
-                  <Select
-                    value={addDepNewUnit}
-                    onChange={(v) => setAddDepNewUnit(v as DurationUnit)}
-                    options={DURATION_UNITS}
-                    style={{ width: 90 }}
-                  />
-                </Space>
-                <Input.TextArea
-                  placeholder="Details"
-                  value={addDepNewDetails}
-                  onChange={(e) => setAddDepNewDetails(e.target.value)}
-                  rows={2}
-                />
-                <Input
-                  placeholder="Tags (comma-separated)"
-                  value={addDepNewTagsInput}
-                  onChange={(e) => setAddDepNewTagsInput(e.target.value)}
-                />
-                <Button type="primary" size="small" onClick={handleAddDepNew} disabled={!addDepNewTitle.trim()}>
-                  Create & add as dependency
-                </Button>
-                <Button size="small" onClick={() => setShowAddDep(false)}>Cancel</Button>
-              </Space>
-            </div>
-          )}
-        </div>
-
-        <div className="task-detail-section">
-          <div className="task-detail-section-header">
-            <Typography.Text strong>Child tasks</Typography.Text>
-            <Button
-              type="text"
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={() => setShowAddChild(!showAddChild)}
-            >
-              Add
-            </Button>
-          </div>
-          {children.length > 0 && (
-            <List
-              size="small"
-              dataSource={children}
-              renderItem={(t) => (
-                <List.Item
-                  actions={[
-                    <Button
-                      type="text"
-                      size="small"
-                      onClick={() => onOpenTask(t.id)}
-                    >
-                      Open
-                    </Button>,
-                  ]}
-                >
-                  <List.Item.Meta
-                    title={t.title}
-                    description={
-                      (t.startDate ? format(parseISO(t.startDate), 'MMM d') : 'No date')
-                      + ` · ${t.duration}d`
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-          {showAddChild && (
-            <div className="task-detail-add-form">
-              <Space direction="vertical" style={{ width: '100%' }} size="small">
-                <Input
-                  placeholder="Child task title"
-                  value={addChildTitle}
-                  onChange={(e) => setAddChildTitle(e.target.value)}
-                />
-                <DatePicker
-                  format="YYYY-MM-DD"
-                  value={addChildStart ? dayjs(addChildStart) : null}
-                  onChange={(date) => setAddChildStart(date ? date.format('YYYY-MM-DD') : '')}
-                  style={{ width: '100%' }}
-                />
-                <Space>
-                  <InputNumber
-                    min={1}
-                    value={addChildDuration}
-                    onChange={(v) => setAddChildDuration(v ?? 1)}
-                    style={{ width: 80 }}
-                  />
-                  <Select
-                    value={addChildUnit}
-                    onChange={(v) => setAddChildUnit(v as DurationUnit)}
-                    options={DURATION_UNITS}
-                    style={{ width: 90 }}
-                  />
-                </Space>
-                <Button type="primary" size="small" onClick={handleAddChild} disabled={!addChildTitle.trim()}>
-                  Add child
-                </Button>
-                <Button size="small" onClick={() => setShowAddChild(false)}>Cancel</Button>
-              </Space>
-            </div>
-          )}
         </div>
       </div>
-    </Drawer>
+    </div>
   )
 }

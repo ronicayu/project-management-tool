@@ -2,16 +2,22 @@
   --bg: #0f0f12;
   --surface: #18181c;
   --surface-hover: #1f1f24;
+  --surface-card: #15151e;
   --border: #2a2a30;
   --text: #e8e8ec;
-  --text-muted: #8888a0;
+  --text-primary: #f0f0f5;
+  --text-muted: #666680;
   --accent: #6366f1;
   --accent-hover: #818cf8;
+  --blue: #3b82f6;
   --success: #22c55e;
-  --warning: #eab308;
+  --warning: #f59e0b;
   --danger: #ef4444;
   --font-sans: 'DM Sans', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-heading: 'Sora', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --sidebar-bg: #000000;
+  --sidebar-width: 64px;
 }
 
 * {

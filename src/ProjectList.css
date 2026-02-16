@@ -1,93 +1,345 @@
-.project-list {
-  max-width: 480px;
-}
-
-.project-list-heading {
-  margin: 0 0 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.project-list-form {
+/* ── Project Page Layout ───────────────────────────────────── */
+.project-page {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  min-height: 100vh;
+  background: var(--bg);
 }
 
-.project-list-input {
+/* ── Main Area ────────────────────────────────────────────── */
+.project-main {
   flex: 1;
-  padding: 0.6rem 0.75rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font-size: 0.95rem;
+  padding: 48px 64px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-height: 100vh;
 }
 
-.project-list-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.project-list-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.project-list-item {
+/* ── Page Header ──────────────────────────────────────────── */
+.project-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  justify-content: space-between;
+  width: 100%;
 }
 
-.project-list-enter {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  text-align: left;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 500;
+.project-header h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -2px;
 }
 
-.project-list-enter:hover {
-  background: var(--surface-hover);
-  border-color: var(--accent);
-}
-
-.project-list-delete {
-  padding: 0.5rem 0.75rem;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.project-list-delete:hover {
-  color: var(--danger);
-  border-color: var(--danger);
-}
-
-.project-list-empty {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.app-back {
-  margin-bottom: 0.5rem;
-  padding: 0.35rem 0;
-  background: none;
+.new-project-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--accent);
   border: none;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  border-radius: 8px;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-.app-back:hover {
+.new-project-btn:hover {
+  background: var(--accent-hover);
+}
+
+.new-project-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+
+/* ── Project Grid ─────────────────────────────────────────── */
+.project-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  width: 100%;
+}
+
+/* ── Project Card ─────────────────────────────────────────── */
+.project-card {
+  flex: 0 0 380px;
+  max-width: 380px;
+  height: 220px;
+  background: var(--surface-card);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.project-card:hover {
+  background: #1a1a28;
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15);
+}
+
+.project-card:hover .card-delete-btn {
+  opacity: 1;
+}
+
+/* ── Card Header ──────────────────────────────────────────── */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.card-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.card-badge.active {
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.125);
+}
+
+.card-badge.planning {
+  color: var(--blue);
+  background: rgba(59, 130, 246, 0.125);
+}
+
+.card-badge.completed {
+  color: var(--success);
+  background: rgba(34, 197, 94, 0.125);
+}
+
+.card-badge.new {
+  color: var(--text-muted);
+  background: rgba(102, 102, 128, 0.125);
+}
+
+/* ── Card Stats ───────────────────────────────────────────── */
+.card-stats {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+}
+
+.card-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-stat-value {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.card-stat-value.blue {
+  color: var(--blue);
+}
+
+.card-stat-value.green {
+  color: var(--success);
+}
+
+.card-stat-value.muted {
+  color: var(--text-muted);
+}
+
+.card-stat-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* ── Card Progress ────────────────────────────────────────── */
+.card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.card-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #2a2a36;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.card-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.card-progress-fill.complete {
+  background: var(--success);
+}
+
+.card-progress-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* ── Card Delete ──────────────────────────────────────────── */
+.card-delete-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: var(--danger);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  padding: 0;
+  z-index: 2;
+}
+
+.card-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.card-delete-btn .material-symbols-rounded {
+  font-size: 16px;
+}
+
+/* ── Add New Card ─────────────────────────────────────────── */
+.add-project-card {
+  flex: 0 0 380px;
+  max-width: 380px;
+  height: 220px;
+  border: 1.5px dashed #2a2a36;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: transparent;
+}
+
+.add-project-card:hover {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.add-card-icon {
+  width: 48px;
+  height: 48px;
+  background: #1a1a26;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: background 0.15s;
+}
+
+.add-project-card:hover .add-card-icon {
+  background: rgba(99, 102, 241, 0.15);
   color: var(--accent);
+}
+
+.add-card-icon .material-symbols-rounded {
+  font-size: 24px;
+}
+
+.add-card-text {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ── Create Project Modal ─────────────────────────────────── */
+.create-project-modal .ant-modal-content {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+}
+
+.create-project-modal .ant-modal-header {
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+}
+
+.create-project-modal .ant-modal-title {
+  font-family: var(--font-heading);
+}
+
+/* ── Empty State ──────────────────────────────────────────── */
+.project-empty-text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px 0;
+}
+
+/* ── Loading ──────────────────────────────────────────────── */
+.project-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
 }

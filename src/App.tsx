@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Layout, Alert, Button, Space, Segmented, Spin } from 'antd'
-import { ArrowLeftOutlined } from '@ant-design/icons'
+import { Alert, Spin, Modal, Input, InputNumber, DatePicker, Select, Space, Segmented } from 'antd'
+import dayjs from 'dayjs'
 import {
   getProjects,
   getProjectStats,
@@ -14,17 +14,22 @@ import {
   addDependency,
   removeDependency,
 } from './store'
-import type { Task, Project, ProjectStats, ViewMode, TimeUnit } from './types'
+import type { Task, Project, ProjectStats, ViewMode, TimeUnit, DurationUnit } from './types'
+import { durationToDays } from './utils/dateUtils'
+import { Sidebar } from './Sidebar'
 import { TaskList } from './TaskList'
 import { TimelineView } from './TimelineView'
 import { GanttView } from './GanttView'
 import { DependencyView } from './DependencyView'
-import { CreateTaskForm } from './CreateTaskForm'
 import { ProjectList } from './ProjectList'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import './App.css'
 
-const { Header, Content } = Layout
+const DURATION_UNITS: { value: DurationUnit; label: string }[] = [
+  { value: 'day', label: 'days' },
+  { value: 'week', label: 'weeks' },
+  { value: 'month', label: 'months' },
+]
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -36,6 +41,16 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+
+  // New Task modal state
+  const [showNewTask, setShowNewTask] = useState(false)
+  const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [newTaskStart, setNewTaskStart] = useState('')
+  const [newTaskDuration, setNewTaskDuration] = useState(1)
+  const [newTaskDurationUnit, setNewTaskDurationUnit] = useState<DurationUnit>('day')
+  const [newTaskParentId, setNewTaskParentId] = useState<string | null>(null)
+  const [newTaskDetails, setNewTaskDetails] = useState('')
+  const [newTaskTags, setNewTaskTags] = useState('')
 
   const refreshProjects = useCallback(async () => {
     try {
@@ -73,6 +88,8 @@ export default function App() {
     setLoading(true)
     refreshTasks().finally(() => setLoading(false))
   }, [currentProject, refreshTasks])
+
+  // ── Handlers ──────────────────────────────────────────────
 
   const handleCreateProject = async (name: string) => {
     try {
@@ -124,6 +141,7 @@ export default function App() {
 
   const handleDeleteTask = async (id: string) => {
     try {
+      if (selectedTaskId === id) setSelectedTaskId(null)
       await deleteTask(id)
       await refreshTasks()
     } catch (e) {
@@ -183,10 +201,46 @@ export default function App() {
     }
   }
 
-  const showProjectList = currentProject === null
+  const handleNewTaskSubmit = () => {
+    const t = newTaskTitle.trim()
+    if (!t) return
+    const dur = durationToDays(newTaskDuration, newTaskDurationUnit)
+    const tags = newTaskTags.split(',').map((s) => s.trim()).filter(Boolean)
+    handleCreateTask(t, newTaskStart || null, dur, newTaskParentId, newTaskDetails, tags)
+    setShowNewTask(false)
+    setNewTaskTitle('')
+    setNewTaskStart('')
+    setNewTaskDuration(1)
+    setNewTaskDurationUnit('day')
+    setNewTaskParentId(null)
+    setNewTaskDetails('')
+    setNewTaskTags('')
+  }
 
-  // ── Project List Page (full-page layout, no header) ──
-  if (showProjectList) {
+  // ── Computed header info ──────────────────────────────────
+
+  const taskCount = tasks.length
+  const inProgressCount = tasks.filter((t) => {
+    if (!t.startDate) return false
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const start = new Date(t.startDate)
+    const end = new Date(t.startDate)
+    end.setDate(end.getDate() + t.duration)
+    return start <= today && end > today
+  }).length
+  const latestDue = tasks.reduce<string | null>((max, t) => {
+    if (!t.startDate) return max
+    const d = new Date(t.startDate)
+    d.setDate(d.getDate() + t.duration)
+    const iso = d.toISOString().split('T')[0]
+    return !max || iso > max ? iso : max
+  }, null)
+
+  const topLevel = tasks.filter((t) => !t.parentId)
+
+  // ── Project List Page ─────────────────────────────────────
+  if (!currentProject) {
     return (
       <>
         {error && (
@@ -210,121 +264,212 @@ export default function App() {
     )
   }
 
-  // ── Task Views (existing layout with header) ──
+  // ── Task Views Page ───────────────────────────────────────
   return (
-    <Layout className="app">
-      <Header className="app-header">
-        <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
-          <Space>
-            <Button
-              type="text"
-              icon={<ArrowLeftOutlined />}
-              onClick={() => setCurrentProject(null)}
-              style={{ color: 'rgba(255,255,255,0.85)' }}
-            >
-              Projects
-            </Button>
-            <span className="app-title">TEU</span>
-            <span className="app-subtitle">{currentProject.name}</span>
-          </Space>
-          <Segmented
-            value={view}
-            onChange={(v) => setView(v as ViewMode)}
-            options={[
-              { label: 'List', value: 'list' },
-              { label: 'Timeline', value: 'timeline' },
-              { label: 'Gantt', value: 'gantt' },
-              { label: 'Dependencies', value: 'dependencies' },
-            ]}
-          />
-        </Space>
-      </Header>
+    <div className="task-page">
+      <Sidebar
+        activeItem="tasks"
+        onNavigateHome={() => {
+          setCurrentProject(null)
+          setSelectedTaskId(null)
+        }}
+      />
 
-      <Content className="app-main">
+      <main className="task-main-content">
+        {/* Header */}
+        <header className="task-page-header">
+          <div className="task-header-left">
+            <h2 className="task-page-title">{currentProject.name}</h2>
+            <span className="task-page-subtitle">
+              {taskCount} task{taskCount !== 1 ? 's' : ''}
+              {inProgressCount > 0 && ` · ${inProgressCount} in progress`}
+              {latestDue && ` · Due ${new Date(latestDue).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+            </span>
+          </div>
+          <div className="task-header-right">
+            <div className="view-switcher">
+              {(['list', 'timeline', 'gantt', 'dependencies'] as ViewMode[]).map((v) => (
+                <button
+                  key={v}
+                  className={`view-tab ${view === v ? 'active' : ''}`}
+                  onClick={() => setView(v)}
+                >
+                  {v === 'dependencies' ? 'Deps' : v.charAt(0).toUpperCase() + v.slice(1)}
+                </button>
+              ))}
+            </div>
+            <button className="new-task-btn" onClick={() => setShowNewTask(true)}>
+              <span className="material-symbols-rounded" style={{ fontSize: 18 }}>add</span>
+              <span>New Task</span>
+            </button>
+          </div>
+        </header>
+
         {error && (
           <Alert
             message={error}
             type="error"
             closable
             onClose={() => setError(null)}
-            style={{ marginBottom: 16 }}
+            style={{ margin: '0 40px 16px 40px' }}
           />
         )}
 
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 48 }}>
-            <Spin size="large" tip="Loading tasks…" />
-          </div>
-        ) : view === 'list' ? (
-          <section className="task-view">
-            <CreateTaskForm onCreate={handleCreateTask} tasks={tasks} />
+        {/* Content */}
+        <div className="task-content-body">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 64 }}>
+              <Spin size="large" />
+            </div>
+          ) : view === 'list' ? (
             <TaskList
               tasks={tasks}
+              selectedTaskId={selectedTaskId}
+              onSelectTask={setSelectedTaskId}
               onUpdate={handleUpdateTask}
               onDelete={handleDeleteTask}
               onAddChild={handleAddChild}
               onAddDependency={handleAddDependency}
               onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
               onRemoveDependency={handleRemoveDependency}
-              onOpenTask={setSelectedTaskId}
             />
-          </section>
-        ) : view === 'timeline' ? (
-          <>
-            <div className="view-toolbar">
-              <Space>
-                <span className="view-toolbar-label">Time unit:</span>
-                <Segmented
-                  value={timeUnit}
-                  onChange={(v) => setTimeUnit(v as TimeUnit)}
-                  options={(['day', 'week', 'month', 'quarter'] as const).map((u) => ({
-                    label: u.charAt(0).toUpperCase() + u.slice(1),
-                    value: u,
-                  }))}
-                />
-              </Space>
+          ) : view === 'timeline' ? (
+            <div style={{ padding: '0 40px' }}>
+              <div className="view-toolbar">
+                <Space>
+                  <span className="view-toolbar-label">Time unit:</span>
+                  <Segmented
+                    value={timeUnit}
+                    onChange={(v) => setTimeUnit(v as TimeUnit)}
+                    options={(['day', 'week', 'month', 'quarter'] as const).map((u) => ({
+                      label: u.charAt(0).toUpperCase() + u.slice(1),
+                      value: u,
+                    }))}
+                  />
+                </Space>
+              </div>
+              <TimelineView tasks={tasks} timeUnit={timeUnit} onUpdateTask={handleUpdateTask} />
             </div>
-            <TimelineView tasks={tasks} timeUnit={timeUnit} onUpdateTask={handleUpdateTask} />
-          </>
-        ) : view === 'dependencies' ? (
-          <DependencyView tasks={tasks} onOpenTask={setSelectedTaskId} />
-        ) : (
-          <>
-            <div className="view-toolbar">
-              <Space>
-                <span className="view-toolbar-label">Time unit:</span>
-                <Segmented
-                  value={timeUnit}
-                  onChange={(v) => setTimeUnit(v as TimeUnit)}
-                  options={(['day', 'week', 'month', 'quarter'] as const).map((u) => ({
-                    label: u.charAt(0).toUpperCase() + u.slice(1),
-                    value: u,
-                  }))}
-                />
-              </Space>
+          ) : view === 'dependencies' ? (
+            <div style={{ padding: '0 40px' }}>
+              <DependencyView tasks={tasks} onOpenTask={setSelectedTaskId} />
             </div>
-            <GanttView
-              tasks={tasks}
-              timeUnit={timeUnit}
-              onUpdateTask={handleUpdateTask}
-              onOpenTask={setSelectedTaskId}
-              onSwitchToView={setView}
+          ) : (
+            <div style={{ padding: '0 40px' }}>
+              <div className="view-toolbar">
+                <Space>
+                  <span className="view-toolbar-label">Time unit:</span>
+                  <Segmented
+                    value={timeUnit}
+                    onChange={(v) => setTimeUnit(v as TimeUnit)}
+                    options={(['day', 'week', 'month', 'quarter'] as const).map((u) => ({
+                      label: u.charAt(0).toUpperCase() + u.slice(1),
+                      value: u,
+                    }))}
+                  />
+                </Space>
+              </div>
+              <GanttView
+                tasks={tasks}
+                timeUnit={timeUnit}
+                onUpdateTask={handleUpdateTask}
+                onOpenTask={setSelectedTaskId}
+                onSwitchToView={setView}
+              />
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Task Detail Drawer */}
+      {selectedTaskId && (
+        <TaskDetailDrawer
+          taskId={selectedTaskId}
+          tasks={tasks}
+          onClose={() => setSelectedTaskId(null)}
+          onUpdate={handleUpdateTask}
+          onDelete={handleDeleteTask}
+          onAddChild={handleAddChild}
+          onAddDependency={handleAddDependency}
+          onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
+          onRemoveDependency={handleRemoveDependency}
+          onOpenTask={setSelectedTaskId}
+        />
+      )}
+
+      {/* New Task Modal */}
+      <Modal
+        open={showNewTask}
+        title="New Task"
+        onCancel={() => setShowNewTask(false)}
+        onOk={handleNewTaskSubmit}
+        okText="Create"
+        okButtonProps={{ disabled: !newTaskTitle.trim() }}
+        destroyOnHidden
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <div>
+            <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Title</label>
+            <Input
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Task title"
+              onPressEnter={handleNewTaskSubmit}
+              autoFocus
             />
-          </>
-        )}
-      </Content>
-      <TaskDetailDrawer
-        taskId={selectedTaskId}
-        tasks={tasks}
-        onClose={() => setSelectedTaskId(null)}
-        onUpdate={handleUpdateTask}
-        onDelete={handleDeleteTask}
-        onAddChild={handleAddChild}
-        onAddDependency={handleAddDependency}
-        onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
-        onRemoveDependency={handleRemoveDependency}
-        onOpenTask={setSelectedTaskId}
-      />
-    </Layout>
+          </div>
+          <Space wrap>
+            <div>
+              <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Start Date</label>
+              <DatePicker
+                format="YYYY-MM-DD"
+                value={newTaskStart ? dayjs(newTaskStart) : null}
+                onChange={(d) => setNewTaskStart(d ? d.format('YYYY-MM-DD') : '')}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Duration</label>
+              <Space.Compact>
+                <InputNumber min={1} value={newTaskDuration} onChange={(v) => setNewTaskDuration(v ?? 1)} style={{ width: 72 }} />
+                <Select
+                  value={newTaskDurationUnit}
+                  onChange={(v) => setNewTaskDurationUnit(v as DurationUnit)}
+                  options={DURATION_UNITS}
+                  style={{ width: 90 }}
+                />
+              </Space.Compact>
+            </div>
+          </Space>
+          <div>
+            <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Parent Task</label>
+            <Select
+              value={newTaskParentId ?? undefined}
+              onChange={(v) => setNewTaskParentId(v ?? null)}
+              placeholder="None (top level)"
+              allowClear
+              style={{ width: '100%' }}
+              options={topLevel.map((t) => ({ value: t.id, label: t.title }))}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Details</label>
+            <Input.TextArea
+              value={newTaskDetails}
+              onChange={(e) => setNewTaskDetails(e.target.value)}
+              placeholder="Notes…"
+              rows={3}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>Tags</label>
+            <Input
+              value={newTaskTags}
+              onChange={(e) => setNewTaskTags(e.target.value)}
+              placeholder="e.g. research, planning (comma-separated)"
+            />
+          </div>
+        </Space>
+      </Modal>
+    </div>
   )
 }
