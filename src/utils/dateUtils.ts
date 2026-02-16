@@ -69,7 +69,13 @@ export function getProjectBounds(
     if (start < min) min = start
     if (end > max) max = end
   })
-  return { min: startOfDay(min), max: startOfDay(max) }
+  min = startOfDay(min)
+  max = startOfDay(max)
+  if (today < min) min = today
+  if (today > max) max = today
+  const minSpanDays = 30
+  if (differenceInDays(max, min) < minSpanDays) max = addDays(min, minSpanDays)
+  return { min, max }
 }
 
 export function dateToPercent(date: Date, min: Date, max: Date): number {
