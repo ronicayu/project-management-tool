@@ -1,8 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
-import { CaretRightOutlined, CaretDownOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import type { Task, TimeUnit, ViewMode } from './types'
-import { parseISO, format, addDays, startOfDay } from 'date-fns'
+import { parseISO, format, addDays, startOfDay, endOfWeek } from 'date-fns'
 import {
   getProjectBounds,
   getAxisTicks,
@@ -17,16 +16,41 @@ import './GanttView.css'
 const CLICK_DRAG_THRESHOLD_PX = 5
 const ZOOM_OPTIONS = [50, 75, 100, 125, 150] as const
 
-const ROW_HEIGHT = 48
+const ROW_HEIGHT_PARENT = 44
+const ROW_HEIGHT_CHILD = 36
 const BAR_MARGIN = 4
-/** Horizontal offset per lane so multiple edges into the same target don't overlap. */
-const EDGE_LANE_OFFSET = 14
+const DEPENDENCY_EXIT_RIGHT_PX = 14
 
 const UNIT_WIDTH_PX: Record<TimeUnit, number> = {
   day: 24,
-  week: 28,
+  week: 140,
   month: 36,
   quarter: 48,
+}
+
+/** Task status for bar color: done | in_progress | active (parent with mixed) | not_started */
+function getTaskStatus(task: Task): 'done' | 'in_progress' | 'not_started' {
+  if (!task.startDate) return 'not_started'
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const start = new Date(task.startDate)
+  const end = new Date(task.startDate)
+  end.setDate(end.getDate() + task.duration)
+  if (end <= today) return 'done'
+  if (start <= today) return 'in_progress'
+  return 'not_started'
+}
+
+function getBarStatus(task: Task, tasks: Task[]): 'done' | 'in_progress' | 'active' | 'not_started' {
+  const children = tasks.filter((t) => t.parentId === task.id)
+  if (children.length === 0) {
+    const s = getTaskStatus(task)
+    return s === 'in_progress' ? 'active' : s
+  }
+  const statuses = children.map((c) => getTaskStatus(c))
+  if (statuses.every((s) => s === 'done')) return 'done'
+  if (statuses.some((s) => s === 'in_progress' || s === 'done')) return 'active'
+  return 'not_started'
 }
 
 interface GanttViewProps {
@@ -119,6 +143,16 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
     })
     return m
   }, [rows])
+
+  const rowHeights = useMemo(
+    () => rows.map((row) => (tasks.some((t) => t.parentId === row.parent.id) ? ROW_HEIGHT_PARENT : ROW_HEIGHT_CHILD)),
+    [rows, tasks]
+  )
+  const totalBodyHeight = useMemo(() => rowHeights.reduce((a, b) => a + b, 0), [rowHeights])
+
+  const getRowHeight = (rowIndex: number) => rowHeights[rowIndex] ?? ROW_HEIGHT_PARENT
+  const getRowTop = (rowIndex: number) => rowHeights.slice(0, rowIndex).reduce((a, b) => a + b, 0)
+  const getRowCenter = (rowIndex: number) => getRowTop(rowIndex) + getRowHeight(rowIndex) / 2
   const visibleEdges = useMemo(
     () => edges.filter((e) => rowIndexById.has(e.from.id) && rowIndexById.has(e.to.id)),
     [edges, rowIndexById]
@@ -316,9 +350,9 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
       ) : (
         <>
           <div className="gantt-toolbar">
-            <Button size="small" onClick={handleFitToView}>
+            <button type="button" className="gantt-fit-btn" onClick={handleFitToView}>
               Fit to view
-            </Button>
+            </button>
             <div className="gantt-zoom">
               <span className="gantt-zoom-label">Zoom:</span>
               <div className="gantt-zoom-buttons">
@@ -355,68 +389,82 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
             <div className="gantt-header">
               <div className="gantt-header-task">Task</div>
               <div className="gantt-header-chart" style={{ display: 'flex' }}>
-                {ticks.map((tick) => (
-                  <div
-                    key={tick.date.getTime()}
-                    className="gantt-header-day"
-                    style={{ width: columnWidthPx }}
-                  >
-                    {tick.label}
-                  </div>
-                ))}
+                {ticks.map((tick) => {
+                  const label =
+                    timeUnit === 'week'
+                      ? `${format(tick.date, 'MMM d')} – ${format(endOfWeek(tick.date, { weekStartsOn: 1 }), 'MMM d')}`
+                      : tick.label
+                  return (
+                    <div
+                      key={tick.date.getTime()}
+                      className="gantt-header-day"
+                      style={{ width: columnWidthPx }}
+                    >
+                      {label}
+                    </div>
+                  )
+                })}
               </div>
             </div>
             <div className="gantt-body">
               <div
+                className="gantt-grid-lines"
+                style={{ width: chartWidth, height: totalBodyHeight }}
+                aria-hidden
+              >
+                {ticks.slice(1).map((tick, idx) => (
+                  <div
+                    key={tick.date.getTime()}
+                    className="gantt-grid-line"
+                    style={{ left: (idx + 1) * columnWidthPx }}
+                  />
+                ))}
+              </div>
+              <div
                 className="gantt-dependency-layer"
                 style={{
-                  left: 240,
                   width: chartWidth,
-                  height: rows.length * ROW_HEIGHT,
+                  height: totalBodyHeight,
                 }}
                 aria-hidden
               >
                 <svg
                   width={chartWidth}
-                  height={rows.length * ROW_HEIGHT}
+                  height={totalBodyHeight}
                   className="gantt-dependency-svg"
                 >
-                  <defs>
-                    <marker
-                      id="gantt-arrow"
-                      markerWidth="8"
-                      markerHeight="8"
-                      refX="6"
-                      refY="4"
-                      orient="auto"
-                    >
-                      <path
-                        d="M0,0 L8,4 L0,8 Z"
-                        fill="var(--text-muted)"
-                      />
-                    </marker>
-                  </defs>
                   {visibleEdges.map(({ from, to }, k) => {
                     const fromRow = rowIndexById.get(from.id) ?? 0
                     const toRow = rowIndexById.get(to.id) ?? 0
                     const xFromEnd = BAR_MARGIN + leftPx(from) + widthPx(from)
                     const xToStart = BAR_MARGIN + leftPx(to)
-                    const yFrom = fromRow * ROW_HEIGHT + ROW_HEIGHT / 2
-                    const yTo = toRow * ROW_HEIGHT + ROW_HEIGHT / 2
-                    const midX = (xFromEnd + xToStart) / 2
+                    const yFrom = getRowCenter(fromRow)
+                    let yTo = getRowCenter(toRow)
                     const key = `${from.id}-${to.id}`
                     const laneIndex = edgeLane.get(key) ?? 0
                     const nLanes = edgeLaneCount.get(key) ?? 1
-                    const laneOffset = (laneIndex - (nLanes - 1) / 2) * EDGE_LANE_OFFSET
-                    const cpx = midX + laneOffset
-                    const path = `M ${xFromEnd} ${yFrom} L ${cpx} ${yFrom} L ${cpx} ${yTo} L ${xToStart} ${yTo}`
+                    if (nLanes > 1) {
+                      yTo += (laneIndex - (nLanes - 1) / 2) * 6
+                    }
+                    const xMid = xFromEnd + DEPENDENCY_EXIT_RIGHT_PX
+                    const path = `M ${xFromEnd} ${yFrom} L ${xMid} ${yFrom} L ${xMid} ${yTo} L ${xToStart} ${yTo}`
                     return (
-                      <path
-                        key={`${from.id}-${to.id}-${k}`}
-                        d={path}
-                        className="gantt-dependency-line"
-                        markerEnd="url(#gantt-arrow)"
-                      />
+                      <g key={`${from.id}-${to.id}-${k}`}>
+                        <title>{`${to.title} depends on ${from.title}`}</title>
+                        <path
+                          d={path}
+                          className="gantt-dependency-line"
+                          fill="none"
+                          stroke="rgba(138, 138, 160, 0.44)"
+                          strokeWidth={2}
+                        />
+                        <circle
+                          cx={xToStart}
+                          cy={yTo}
+                          r={2.5}
+                          className="gantt-dependency-dot"
+                        />
+                      </g>
                     )
                   })}
                 </svg>
@@ -425,9 +473,8 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
                 <div
                   className="gantt-today-layer"
                   style={{
-                    left: 240,
                     width: chartWidth,
-                    height: rows.length * ROW_HEIGHT,
+                    height: totalBodyHeight,
                   }}
                   aria-hidden
                 >
@@ -441,32 +488,29 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
                 </div>
               )}
               {rows.map((row, i) => {
-                const rowTasks = [row.parent, ...row.children]
+                const rowTasks = [row.parent]
+                const isParentRow = hasChildren(row.parent.id)
+                const barStatus = getBarStatus(row.parent, tasks)
                 return (
                   <div
                     key={row.parent.id}
-                    className="gantt-row"
-                    style={{
-                      background:
-                        i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                    }}
+                    className={`gantt-row ${isParentRow ? 'gantt-row-parent' : 'gantt-row-child'}`}
+                    style={{ minHeight: getRowHeight(i) }}
                   >
                     <div className="gantt-task-cell">
                       <div className="gantt-task-title-row">
                         {hasChildren(row.parent.id) ? (
-                          <span
+                          <button
+                            type="button"
                             className="gantt-expand"
                             onClick={() => toggleCollapsed(row.parent.id)}
                             title={collapsedIds.has(row.parent.id) ? 'Expand' : 'Collapse'}
-                            role="button"
                             aria-expanded={!collapsedIds.has(row.parent.id)}
                           >
-                            {collapsedIds.has(row.parent.id) ? (
-                              <CaretRightOutlined />
-                            ) : (
-                              <CaretDownOutlined />
-                            )}
-                          </span>
+                            <span className="material-symbols-rounded">
+                              {collapsedIds.has(row.parent.id) ? 'chevron_right' : 'expand_more'}
+                            </span>
+                          </button>
                         ) : (
                           <span className="gantt-expand gantt-expand-placeholder" />
                         )}
@@ -486,18 +530,10 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
                           </span>
                         )}
                       </div>
-                      <span className="gantt-task-meta">
-                        {(() => {
-                          const eff = getEffectiveTaskBounds(tasks, row.parent.id)
-                          return eff.startDate
-                            ? `${format(parseISO(eff.startDate), 'MMM d')} · ${eff.duration}d`
-                            : `No date · ${eff.duration}d`
-                        })()}
-                      </span>
                     </div>
                     <div
                       className="gantt-chart-cell"
-                      style={{ width: chartWidth }}
+                      style={{ width: chartWidth, height: getRowHeight(i) }}
                     >
                       <div className="gantt-bar-wrap">
                         {rowTasks.map((task) => {
@@ -507,10 +543,12 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
                           const left = leftPx(task) + (isDragging ? dragOffsetPx : 0)
                           const width = widthPx(task) + (isResizing ? resizeOffsetPx : 0)
                           const displayWidth = Math.max(unitWidth * 0.5, width)
+                          const statusClass = `gantt-bar-status-${barStatus}`
+                          const childClass = !isParentRow ? 'gantt-bar-child' : ''
                           return (
                             <div
                               key={task.id}
-                              className={`gantt-bar ${isDragging ? 'gantt-bar-dragging' : ''} ${isResizing ? 'gantt-bar-resizing' : ''} ${(onUpdateTask || onOpenTask) && !hasChildren(task.id) ? 'gantt-bar-draggable' : ''} ${onUpdateTask && !hasChildren(task.id) ? 'gantt-bar-resizable' : ''} ${onOpenTask && hasChildren(task.id) ? 'gantt-bar-clickable' : ''}`}
+                              className={`gantt-bar ${statusClass} ${childClass} ${isDragging ? 'gantt-bar-dragging' : ''} ${isResizing ? 'gantt-bar-resizing' : ''} ${(onUpdateTask || onOpenTask) && !hasChildren(task.id) ? 'gantt-bar-draggable' : ''} ${onUpdateTask && !hasChildren(task.id) ? 'gantt-bar-resizable' : ''} ${onOpenTask && hasChildren(task.id) ? 'gantt-bar-clickable' : ''}`}
                               style={{
                                 left,
                                 width: displayWidth,
@@ -541,10 +579,10 @@ export function GanttView({ tasks, timeUnit, onUpdateTask, onOpenTask, onSwitchT
               })}
               <div
                 className="gantt-legend"
-                style={{ left: 240, width: chartWidth }}
+                style={{ width: chartWidth }}
                 aria-hidden
               >
-                <span className="gantt-legend-text">Dependency: prerequisite → dependent</span>
+                <span className="gantt-legend-text">Dependency: if A depends on B, line from right of B to left of A</span>
               </div>
             </div>
               </div>

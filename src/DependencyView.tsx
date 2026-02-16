@@ -115,11 +115,63 @@ export function DependencyView({ tasks: tasksProp, onOpenTask }: DependencyViewP
 
     const edges = getEdges(tasks)
 
+    // Minimize edge crossings: order nodes at each level by median position of neighbors (barycenter heuristic)
+    const order = new Map<number, string[]>()
+    sortedLevels.forEach((l) => order.set(l, [...levelToTasks.get(l)!]))
+
+    const median = (arr: number[]): number => {
+      if (arr.length === 0) return 0
+      const s = [...arr].sort((a, b) => a - b)
+      const m = Math.floor(s.length / 2)
+      return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2
+    }
+
+    for (let pass = 0; pass < 4; pass++) {
+      // Forward: sort each level by median index of predecessors in previous level
+      for (let li = 1; li < sortedLevels.length; li++) {
+        const L = sortedLevels[li]!
+        const prevL = sortedLevels[li - 1]!
+        const idsAtL = order.get(L)!
+        const prevOrder = order.get(prevL)!
+        const indexInPrev = new Map(prevOrder.map((id, i) => [id, i]))
+        idsAtL.sort((a, b) => {
+          const predsA = edges
+            .filter((e) => e.toId === a && levels.get(e.fromId) === prevL)
+            .map((e) => indexInPrev.get(e.fromId) ?? 0)
+          const predsB = edges
+            .filter((e) => e.toId === b && levels.get(e.fromId) === prevL)
+            .map((e) => indexInPrev.get(e.fromId) ?? 0)
+          const medA = median(predsA.length ? predsA : [0])
+          const medB = median(predsB.length ? predsB : [0])
+          return medA - medB
+        })
+      }
+      // Backward: sort each level by median index of successors in next level
+      for (let li = sortedLevels.length - 2; li >= 0; li--) {
+        const L = sortedLevels[li]!
+        const nextL = sortedLevels[li + 1]!
+        const idsAtL = order.get(L)!
+        const nextOrder = order.get(nextL)!
+        const indexInNext = new Map(nextOrder.map((id, i) => [id, i]))
+        idsAtL.sort((a, b) => {
+          const succsA = edges
+            .filter((e) => e.fromId === a && levels.get(e.toId) === nextL)
+            .map((e) => indexInNext.get(e.toId) ?? 0)
+          const succsB = edges
+            .filter((e) => e.fromId === b && levels.get(e.toId) === nextL)
+            .map((e) => indexInNext.get(e.toId) ?? 0)
+          const medA = median(succsA.length ? succsA : [0])
+          const medB = median(succsB.length ? succsB : [0])
+          return medA - medB
+        })
+      }
+    }
+
     const taskPos = new Map<string, { x: number; y: number }>()
     let maxX = 0
     let maxY = 0
     sortedLevels.forEach((l) => {
-      const ids = levelToTasks.get(l)!
+      const ids = order.get(l)!
       ids.forEach((id, i) => {
         const x = 24 + l * (NODE_WIDTH + LEVEL_GAP)
         const y = 24 + i * (NODE_HEIGHT + NODE_GAP)
