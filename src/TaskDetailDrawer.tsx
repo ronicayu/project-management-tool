@@ -336,6 +336,23 @@ export function TaskDetailDrawer({
                     style={{ background: STATUS_DOT_COLOR[getTaskStatus(child)] }}
                   />
                   <span className="td-item-name">{child.title}</span>
+                  <Popconfirm
+                    title="Remove sub-task?"
+                    description="The task won't be deleted — it will become a top-level task."
+                    onConfirm={(e) => {
+                      e?.stopPropagation()
+                      onUpdate(child.id, { parentId: null })
+                    }}
+                    onCancel={(e) => e?.stopPropagation()}
+                  >
+                    <button
+                      className="td-item-arrow"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Remove from sub-tasks"
+                    >
+                      <span className="material-symbols-rounded">close</span>
+                    </button>
+                  </Popconfirm>
                   <span className="td-item-arrow">
                     <span className="material-symbols-rounded">chevron_right</span>
                   </span>

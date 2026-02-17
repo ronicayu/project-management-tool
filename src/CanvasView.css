@@ -11,6 +11,16 @@
   min-height: 0;
 }
 
+.canvas-view.canvas-panning,
+.canvas-view.canvas-panning .canvas-sticker {
+  cursor: grab !important;
+}
+
+.canvas-view.canvas-panning-active,
+.canvas-view.canvas-panning-active .canvas-sticker {
+  cursor: grabbing !important;
+}
+
 .canvas-inner {
   position: relative;
   min-width: 100%;

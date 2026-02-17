@@ -186,6 +186,33 @@ export function CanvasView({ tasks, onUpdateTask, onSelectTask, selectedTaskId }
   const zoomRef = useRef(zoom)
   zoomRef.current = zoom
 
+  // ── Space + drag panning ──
+  const [spaceHeld, setSpaceHeld] = useState(false)
+  const spaceRef = useRef(false)
+  const [panning, setPanning] = useState<{ startX: number; startY: number; scrollX: number; scrollY: number } | null>(null)
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !e.repeat && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault()
+        spaceRef.current = true
+        setSpaceHeld(true)
+      }
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        spaceRef.current = false
+        setSpaceHeld(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+    }
+  }, [])
+
   // ── Color picker context menu ──
   const [colorPicker, setColorPicker] = useState<{
     taskId: string
@@ -240,6 +267,12 @@ export function CanvasView({ tasks, onUpdateTask, onSelectTask, selectedTaskId }
       e.preventDefault()
       e.stopPropagation()
       ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+
+      if (spaceRef.current) {
+        const el = canvasRef.current!
+        setPanning({ startX: e.clientX, startY: e.clientY, scrollX: el.scrollLeft, scrollY: el.scrollTop })
+        return
+      }
 
       const origPositions = new Map<string, { x: number; y: number }>()
 
@@ -322,13 +355,20 @@ export function CanvasView({ tasks, onUpdateTask, onSelectTask, selectedTaskId }
     return () => window.removeEventListener('pointerdown', close, true)
   }, [colorPicker])
 
-  // ── Canvas pointer down → start marquee ──
+  // ── Canvas pointer down → start panning or marquee ──
   const handleCanvasPointerDown = useCallback(
     (e: React.PointerEvent) => {
       const target = e.target as HTMLElement
       if (target !== canvasRef.current && !target.classList.contains('canvas-inner')) return
       e.preventDefault()
       ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+
+      if (spaceRef.current) {
+        const el = canvasRef.current!
+        setPanning({ startX: e.clientX, startY: e.clientY, scrollX: el.scrollLeft, scrollY: el.scrollTop })
+        return
+      }
+
       const pos = clientToCanvas(e.clientX, e.clientY)
       setMarquee({ startX: pos.x, startY: pos.y, currentX: pos.x, currentY: pos.y })
       setSelectedIds(new Set())
@@ -337,9 +377,15 @@ export function CanvasView({ tasks, onUpdateTask, onSelectTask, selectedTaskId }
     [clientToCanvas, onSelectTask]
   )
 
-  // ── Pointer move (drag or marquee) ──
+  // ── Pointer move (panning, drag, or marquee) ──
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
+      if (panning) {
+        const el = canvasRef.current!
+        el.scrollLeft = panning.scrollX - (e.clientX - panning.startX)
+        el.scrollTop = panning.scrollY - (e.clientY - panning.startY)
+        return
+      }
       if (dragState) {
         const z = zoomRef.current
         const dx = (e.clientX - dragState.startMouseX) / z
@@ -350,12 +396,18 @@ export function CanvasView({ tasks, onUpdateTask, onSelectTask, selectedTaskId }
         setMarquee((prev) => prev ? { ...prev, currentX: pos.x, currentY: pos.y } : null)
       }
     },
-    [dragState, marquee, clientToCanvas]
+    [panning, dragState, marquee, clientToCanvas]
   )
 
   // ── Pointer up ──
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => {
+      // ── Finish panning ──
+      if (panning) {
+        setPanning(null)
+        return
+      }
+
       // ── Finish sticker drag ──
       if (dragState) {
         const z = zoomRef.current
@@ -413,7 +465,7 @@ export function CanvasView({ tasks, onUpdateTask, onSelectTask, selectedTaskId }
         setMarquee(null)
       }
     },
-    [dragState, dragDelta, marquee, tasks, onUpdateTask]
+    [panning, dragState, dragDelta, marquee, tasks, onUpdateTask]
   )
 
   // ── Auto-position unplaced tasks ──
@@ -448,7 +500,7 @@ export function CanvasView({ tasks, onUpdateTask, onSelectTask, selectedTaskId }
   return (
     <div
       ref={canvasRef}
-      className="canvas-view"
+      className={`canvas-view${spaceHeld ? ' canvas-panning' : ''}${panning ? ' canvas-panning-active' : ''}`}
       onPointerDown={handleCanvasPointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
