@@ -69,7 +69,7 @@ export async function createTask(
 
 export async function updateTask(
   id: string,
-  updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'dependencyIds' | 'details' | 'tags'>>
+  updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'dependencyIds' | 'details' | 'tags' | 'canvasX' | 'canvasY' | 'canvasColor'>>
 ): Promise<Task | null> {
   const payload = { ...updates }
   if (payload.duration !== undefined && payload.duration < 1) {

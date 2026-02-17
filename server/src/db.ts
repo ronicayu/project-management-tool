@@ -10,7 +10,7 @@ const pool = new Pool({
 })
 
 const TASK_SELECT =
-  'id, project_id, title, start_date, duration, parent_id, COALESCE(dependency_ids, ARRAY[]::uuid[]) AS dependency_ids, COALESCE(details, \'\') AS details, COALESCE(tags, ARRAY[]::text[]) AS tags, created_at'
+  'id, project_id, title, start_date, duration, parent_id, COALESCE(dependency_ids, ARRAY[]::uuid[]) AS dependency_ids, COALESCE(details, \'\') AS details, COALESCE(tags, ARRAY[]::text[]) AS tags, canvas_x, canvas_y, canvas_color, created_at'
 
 export interface ProjectRow {
   id: string
@@ -28,6 +28,9 @@ export interface TaskRow {
   dependency_ids: string[]
   details: string
   tags: string[]
+  canvas_x: number | null
+  canvas_y: number | null
+  canvas_color: string | null
   created_at: Date
 }
 
@@ -41,6 +44,9 @@ function rowToTask(row: TaskRow) {
     dependencyIds: row.dependency_ids ?? [],
     details: row.details ?? '',
     tags: Array.isArray(row.tags) ? row.tags : [],
+    canvasX: row.canvas_x ?? null,
+    canvasY: row.canvas_y ?? null,
+    canvasColor: row.canvas_color ?? null,
     createdAt: new Date(row.created_at).toISOString(),
   }
 }
@@ -110,7 +116,7 @@ export async function createTaskInProject(
 
 export async function updateTask(
   id: string,
-  updates: { title?: string; startDate?: string; duration?: number; parentId?: string | null; dependencyIds?: string[]; details?: string; tags?: string[] }
+  updates: { title?: string; startDate?: string; duration?: number; parentId?: string | null; dependencyIds?: string[]; details?: string; tags?: string[]; canvasX?: number | null; canvasY?: number | null; canvasColor?: string | null }
 ) {
   const fields: string[] = []
   const values: unknown[] = []
@@ -142,6 +148,18 @@ export async function updateTask(
   if (updates.tags !== undefined) {
     fields.push(`tags = $${i++}::text[]`)
     values.push(Array.isArray(updates.tags) ? updates.tags : [])
+  }
+  if (updates.canvasX !== undefined) {
+    fields.push(`canvas_x = $${i++}`)
+    values.push(updates.canvasX)
+  }
+  if (updates.canvasY !== undefined) {
+    fields.push(`canvas_y = $${i++}`)
+    values.push(updates.canvasY)
+  }
+  if (updates.canvasColor !== undefined) {
+    fields.push(`canvas_color = $${i++}`)
+    values.push(updates.canvasColor)
   }
   if (fields.length === 0) return null
   values.push(id)

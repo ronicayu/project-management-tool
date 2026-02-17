@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Popconfirm, Modal, Input, InputNumber, DatePicker, Button, Space } from 'antd'
 import dayjs from 'dayjs'
 import type { Task } from './types'
@@ -98,6 +98,10 @@ export function TaskDetailDrawer({
   const [createDepDuration, setCreateDepDuration] = useState(1)
   const [createDepDetails, setCreateDepDetails] = useState('')
 
+  const [labelInput, setLabelInput] = useState('')
+  const [showLabelInput, setShowLabelInput] = useState(false)
+  const labelInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (task) {
       setEditingTitle(false)
@@ -119,6 +123,34 @@ export function TaskDetailDrawer({
       notesInputRef.current.focus()
     }
   }, [editingNotes])
+
+  useEffect(() => {
+    if (showLabelInput && labelInputRef.current) {
+      labelInputRef.current.focus()
+    }
+  }, [showLabelInput])
+
+  const handleAddLabel = useCallback(() => {
+    if (!task) return
+    const label = labelInput.trim().toLowerCase()
+    if (!label) return
+    const currentTags = task.tags ?? []
+    if (currentTags.includes(label)) {
+      setLabelInput('')
+      return
+    }
+    onUpdate(task.id, { tags: [...currentTags, label] })
+    setLabelInput('')
+  }, [task, labelInput, onUpdate])
+
+  const handleRemoveLabel = useCallback(
+    (label: string) => {
+      if (!task) return
+      const currentTags = task.tags ?? []
+      onUpdate(task.id, { tags: currentTags.filter((t) => t !== label) })
+    },
+    [task, onUpdate]
+  )
 
   if (!task) return null
 
@@ -298,17 +330,56 @@ export function TaskDetailDrawer({
           </button>
         </div>
 
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="td-section">
-            <span className="td-label">Tags</span>
-            <div className="td-tags-row">
-              {tags.map((tag) => (
-                <span key={tag} className="td-tag">{tag}</span>
-              ))}
-            </div>
+        {/* Labels */}
+        <div className="td-section">
+          <span className="td-label">Labels</span>
+          <div className="td-tags-row">
+            {tags.map((tag) => (
+              <span key={tag} className="td-tag">
+                {tag}
+                <button
+                  className="td-tag-remove"
+                  onClick={() => handleRemoveLabel(tag)}
+                  title={`Remove "${tag}"`}
+                >
+                  <span className="material-symbols-rounded">close</span>
+                </button>
+              </span>
+            ))}
+            {showLabelInput ? (
+              <input
+                ref={labelInputRef}
+                className="td-label-input"
+                placeholder="Label name…"
+                value={labelInput}
+                onChange={(e) => setLabelInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddLabel()
+                  if (e.key === 'Escape') {
+                    setShowLabelInput(false)
+                    setLabelInput('')
+                  }
+                }}
+                onBlur={() => {
+                  if (labelInput.trim()) handleAddLabel()
+                  setShowLabelInput(false)
+                  setLabelInput('')
+                }}
+              />
+            ) : (
+              <button
+                className="td-tag td-tag-add"
+                onClick={() => setShowLabelInput(true)}
+              >
+                <span className="material-symbols-rounded" style={{ fontSize: 14 }}>add</span>
+                Add
+              </button>
+            )}
           </div>
-        )}
+          {tags.length === 0 && !showLabelInput && (
+            <span className="td-notes-empty">No labels yet</span>
+          )}
+        </div>
 
         <div className="td-divider" style={{ margin: 0 }} />
 

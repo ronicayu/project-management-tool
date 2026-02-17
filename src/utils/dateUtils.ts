@@ -22,16 +22,18 @@ export function durationToDays(amount: number, unit: DurationUnit): number {
   return Math.max(1, Math.round(amount * DAYS_PER_DURATION_UNIT[unit]))
 }
 
+/** Last day of task (inclusive) from start + duration. Returns yyyy-MM-dd in local time. */
 export function getEndDate(startDate: string, durationDays: number): string {
-  return addDays(parseISO(startDate), durationDays).toISOString().slice(0, 10)
+  const lastDay = addDays(parseISO(startDate), Math.max(1, durationDays) - 1)
+  return format(lastDay, 'yyyy-MM-dd')
 }
 
-/** Last day of task (inclusive). Returns ISO date string or null if no startDate. Never returns a date before start. */
+/** Last day of task (inclusive). Returns date string yyyy-MM-dd in local time, or null if no startDate. Never returns a date before start. */
 export function getTaskEndDate(task: { startDate: string | null; duration: number }): string | null {
   if (!task.startDate) return null
   const safeDuration = Math.max(1, task.duration)
   const lastDay = addDays(parseISO(task.startDate), safeDuration - 1)
-  return lastDay.toISOString().slice(0, 10)
+  return format(lastDay, 'yyyy-MM-dd')
 }
 
 /** Compute duration (days) from start and end (inclusive). Min 1. */

@@ -13,6 +13,9 @@ export interface Task {
   dependencyIds: string[] // task ids that must complete before this starts
   details: string // description / notes
   tags: string[] // e.g. ['change-management']
+  canvasX: number | null // x position on canvas view
+  canvasY: number | null // y position on canvas view
+  canvasColor: string | null // manual sticker color (hex bg), null = auto
   createdAt: string
 }
 
@@ -24,7 +27,7 @@ export interface ProjectStats {
   latestDue: string | null
 }
 
-export type ViewMode = 'list' | 'timeline' | 'gantt' | 'dependencies'
+export type ViewMode = 'list' | 'timeline' | 'gantt' | 'dependencies' | 'canvas'
 
 export type TimeUnit = 'day' | 'week' | 'month' | 'quarter'
 

@@ -21,6 +21,7 @@ import { TaskList } from './TaskList'
 import { TimelineView } from './TimelineView'
 import { GanttView } from './GanttView'
 import { DependencyView } from './DependencyView'
+import { CanvasView } from './CanvasView'
 import { ProjectList } from './ProjectList'
 import { TaskDetailDrawer } from './TaskDetailDrawer'
 import './App.css'
@@ -129,7 +130,7 @@ export default function App() {
 
   const handleUpdateTask = async (
     id: string,
-    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details' | 'tags'>>
+    updates: Partial<Pick<Task, 'title' | 'startDate' | 'duration' | 'parentId' | 'details' | 'tags' | 'canvasX' | 'canvasY' | 'canvasColor'>>
   ) => {
     try {
       await updateTask(id, updates)
@@ -288,13 +289,13 @@ export default function App() {
           </div>
           <div className="task-header-right">
             <div className="view-switcher">
-              {(['list', 'timeline', 'gantt', 'dependencies'] as ViewMode[]).map((v) => (
+              {(['list', 'timeline', 'gantt', 'dependencies', 'canvas'] as ViewMode[]).map((v) => (
                 <button
                   key={v}
                   className={`view-tab ${view === v ? 'active' : ''}`}
                   onClick={() => setView(v)}
                 >
-                  {v === 'dependencies' ? 'Deps' : v.charAt(0).toUpperCase() + v.slice(1)}
+                  {v === 'dependencies' ? 'Deps' : v === 'canvas' ? 'Canvas' : v.charAt(0).toUpperCase() + v.slice(1)}
                 </button>
               ))}
             </div>
@@ -350,6 +351,13 @@ export default function App() {
               </div>
               <TimelineView tasks={tasks} timeUnit={timeUnit} onUpdateTask={handleUpdateTask} />
             </div>
+          ) : view === 'canvas' ? (
+            <CanvasView
+              tasks={tasks}
+              onUpdateTask={handleUpdateTask}
+              onSelectTask={setSelectedTaskId}
+              selectedTaskId={selectedTaskId}
+            />
           ) : view === 'dependencies' ? (
             <div style={{ padding: '0 40px' }}>
               <DependencyView tasks={tasks} onOpenTask={setSelectedTaskId} />
@@ -383,18 +391,21 @@ export default function App() {
 
       {/* Task Detail Drawer */}
       {selectedTaskId && (
-        <TaskDetailDrawer
-          taskId={selectedTaskId}
-          tasks={tasks}
-          onClose={() => setSelectedTaskId(null)}
-          onUpdate={handleUpdateTask}
-          onDelete={handleDeleteTask}
-          onAddChild={handleAddChild}
-          onAddDependency={handleAddDependency}
-          onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
-          onRemoveDependency={handleRemoveDependency}
-          onOpenTask={setSelectedTaskId}
-        />
+        <>
+          <div className="drawer-backdrop" onClick={() => setSelectedTaskId(null)} />
+          <TaskDetailDrawer
+            taskId={selectedTaskId}
+            tasks={tasks}
+            onClose={() => setSelectedTaskId(null)}
+            onUpdate={handleUpdateTask}
+            onDelete={handleDeleteTask}
+            onAddChild={handleAddChild}
+            onAddDependency={handleAddDependency}
+            onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
+            onRemoveDependency={handleRemoveDependency}
+            onOpenTask={setSelectedTaskId}
+          />
+        </>
       )}
 
       {/* New Task Modal */}

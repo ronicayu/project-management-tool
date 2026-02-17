@@ -1,0 +1,239 @@
+/* ── Canvas View ─────────────────────────────────────────── */
+.canvas-view {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 24px 24px;
+  cursor: default;
+  user-select: none;
+  min-height: 0;
+}
+
+.canvas-inner {
+  position: relative;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+/* ── Zoom badge ──────────────────────────────────────────── */
+.canvas-zoom-badge {
+  position: sticky;
+  bottom: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(18, 18, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ccc;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.canvas-zoom-reset {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #aaa;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.canvas-zoom-reset:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* ── Sticker ─────────────────────────────────────────────── */
+.canvas-sticker {
+  position: absolute;
+  width: 156px;
+  height: 108px;
+  padding: 10px 12px;
+  border: 1px solid;
+  border-radius: 4px;
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.08s;
+}
+
+.canvas-sticker:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.canvas-sticker.dragging {
+  cursor: grabbing;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  transform: scale(1.04) rotate(1deg);
+  opacity: 0.92;
+}
+
+.canvas-sticker.selected {
+  outline: 2px solid var(--accent, #6c5ce7);
+  outline-offset: 2px;
+}
+
+/* ── Sticker content ─────────────────────────────────────── */
+.sticker-title {
+  font-family: var(--font-heading, 'Inter', sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1.25;
+  word-break: break-word;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+.sticker-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.sticker-status {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sticker-status--done {
+  background: rgba(34, 197, 94, 0.2);
+  color: #15803d;
+}
+
+.sticker-status--active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #1d4ed8;
+}
+
+.sticker-status--planned {
+  background: rgba(156, 163, 175, 0.2);
+  color: #4b5563;
+}
+
+.sticker-children-badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.08);
+  color: #555;
+}
+
+.sticker-tag {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #666;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Marquee selection rectangle ─────────────────────────── */
+.canvas-marquee {
+  position: absolute;
+  border: 1.5px dashed rgba(108, 92, 231, 0.85);
+  background: rgba(108, 92, 231, 0.08);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Selection count badge ───────────────────────────────── */
+.canvas-selection-badge {
+  position: sticky;
+  bottom: 12px;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: rgba(108, 92, 231, 0.9);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── Color picker context menu ───────────────────────────── */
+.canvas-color-picker {
+  position: fixed;
+  z-index: 10000;
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 180px;
+}
+
+.color-picker-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.color-picker-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 2px solid;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  padding: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.color-picker-clear {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 0 0;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.color-picker-clear:hover {
+  color: #ccc;
+}

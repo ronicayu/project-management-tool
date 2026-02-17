@@ -145,6 +145,9 @@ app.patch('/api/tasks/:id', async (req, res) => {
       dependencyIds: updates.dependencyIds,
       details: updates.details,
       tags: updates.tags,
+      canvasX: updates.canvasX,
+      canvasY: updates.canvasY,
+      canvasColor: updates.canvasColor,
     })
     if (!task) return res.status(404).json({ error: 'Task not found' })
     res.json(task)

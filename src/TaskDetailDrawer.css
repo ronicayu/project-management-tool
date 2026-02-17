@@ -7,6 +7,8 @@
   flex-direction: column;
   overflow: hidden;
   border-left: 1px solid #1a1a26;
+  position: relative;
+  z-index: 50;
 }
 
 /* ── Header ───────────────────────────────────────────────── */
@@ -131,11 +133,14 @@
 }
 
 .td-tag {
+  display: inline-flex;
+  align-items: center;
   padding: 4px 10px;
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
+  border: 1px solid transparent;
 }
 
 .td-tag:nth-child(odd) {
@@ -146,6 +151,65 @@
 .td-tag:nth-child(even) {
   color: #22c55e;
   background: rgba(34, 197, 94, 0.09);
+}
+
+/* ── Label remove button ─────────────────────────────────── */
+.td-tag-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.5;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.15s;
+  line-height: 1;
+}
+
+.td-tag-remove:hover {
+  opacity: 1;
+}
+
+.td-tag-remove .material-symbols-rounded {
+  font-size: 12px;
+}
+
+/* ── Add label button ────────────────────────────────────── */
+.td-tag-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  color: #666680;
+  background: transparent;
+  border: 1px dashed #2a2a36;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.td-tag-add:hover {
+  color: #818cf8;
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* ── Label inline input ──────────────────────────────────── */
+.td-label-input {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: #f0f0f5;
+  background: #1a1a26;
+  border: 1px solid #2a2a36;
+  border-radius: 4px;
+  padding: 4px 10px;
+  width: 120px;
+  outline: none;
+}
+
+.td-label-input:focus {
+  border-color: var(--accent);
 }
 
 /* ── Dependency / Parent Item ─────────────────────────────── */
