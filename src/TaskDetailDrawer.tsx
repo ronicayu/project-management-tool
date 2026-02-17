@@ -91,6 +91,10 @@ export function TaskDetailDrawer({
   const [addChildStart, setAddChildStart] = useState<string | null>(null)
   const [addChildDuration, setAddChildDuration] = useState(1)
 
+  const [showAddExistingChildModal, setShowAddExistingChildModal] = useState(false)
+  const [childSearchQuery, setChildSearchQuery] = useState('')
+  const childSearchRef = useRef<HTMLInputElement>(null)
+
   const [showAddDepModal, setShowAddDepModal] = useState(false)
   const [showCreateAndAddDepModal, setShowCreateAndAddDepModal] = useState(false)
   const [createDepTitle, setCreateDepTitle] = useState('')
@@ -123,6 +127,13 @@ export function TaskDetailDrawer({
       notesInputRef.current.focus()
     }
   }, [editingNotes])
+
+  useEffect(() => {
+    if (showAddExistingChildModal && childSearchRef.current) {
+      childSearchRef.current.focus()
+    }
+    if (!showAddExistingChildModal) setChildSearchQuery('')
+  }, [showAddExistingChildModal])
 
   useEffect(() => {
     if (showLabelInput && labelInputRef.current) {
@@ -161,6 +172,20 @@ export function TaskDetailDrawer({
     .map((id) => tasks.find((t) => t.id === id))
     .filter(Boolean) as Task[]
   const tags = task.tags ?? []
+  // Tasks eligible to become children of this task
+  const isAncestor = (ancestorId: string, descendantId: string): boolean => {
+    const t = tasks.find((x) => x.id === descendantId)
+    if (!t || !t.parentId) return false
+    if (t.parentId === ancestorId) return true
+    return isAncestor(ancestorId, t.parentId)
+  }
+  const canAddAsChild = tasks.filter(
+    (t) =>
+      t.id !== task.id &&
+      t.parentId !== task.id &&
+      !isAncestor(t.id, task.id)
+  )
+
   const canAddAsDependency = tasks.filter(
     (t) =>
       t.id !== task.id &&
@@ -320,14 +345,24 @@ export function TaskDetailDrawer({
           ) : (
             <span className="td-notes-empty">No sub-tasks</span>
           )}
-          <button
-            type="button"
-            className="td-action-btn secondary"
-            onClick={openAddChildModal}
-          >
-            <span className="material-symbols-rounded">add</span>
-            Add child task
-          </button>
+          <Space style={{ marginTop: 4 }} wrap>
+            <button
+              type="button"
+              className="td-action-btn secondary"
+              onClick={openAddChildModal}
+            >
+              <span className="material-symbols-rounded">add</span>
+              New child task
+            </button>
+            <button
+              type="button"
+              className="td-action-btn secondary"
+              onClick={() => setShowAddExistingChildModal(true)}
+            >
+              <span className="material-symbols-rounded">subdirectory_arrow_right</span>
+              Add existing task
+            </button>
+          </Space>
         </div>
 
         {/* Labels */}
@@ -565,6 +600,72 @@ export function TaskDetailDrawer({
             />
           </div>
         </Space>
+      </Modal>
+
+      {/* Add existing task as child modal */}
+      <Modal
+        title="Add existing task as sub-task"
+        open={showAddExistingChildModal}
+        onCancel={() => setShowAddExistingChildModal(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <p style={{ color: 'var(--text-muted)', marginBottom: 12 }}>
+          Choose a task to make it a sub-task of <strong>{task.title}</strong>.
+        </p>
+        {canAddAsChild.length === 0 ? (
+          <span className="td-notes-empty">No tasks available to add as sub-task.</span>
+        ) : (
+          <>
+            <input
+              ref={childSearchRef}
+              className="td-edit-input"
+              placeholder="Search tasks…"
+              value={childSearchQuery}
+              onChange={(e) => setChildSearchQuery(e.target.value)}
+              style={{ marginBottom: 10, width: '100%' }}
+            />
+            {(() => {
+              const q = childSearchQuery.toLowerCase().trim()
+              const filtered = q
+                ? canAddAsChild.filter((t) => t.title.toLowerCase().includes(q))
+                : canAddAsChild
+              if (filtered.length === 0) {
+                return <span className="td-notes-empty">No matching tasks.</span>
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
+                  {filtered.map((t) => (
+                    <div
+                      key={t.id}
+                      className="td-item-row"
+                      onClick={() => {
+                        onUpdate(t.id, { parentId: task.id })
+                        setShowAddExistingChildModal(false)
+                      }}
+                    >
+                      <div
+                        className="td-item-dot"
+                        style={{ background: STATUS_DOT_COLOR[getTaskStatus(t)] }}
+                      />
+                      <span className="td-item-name">
+                        {t.title}
+                        {t.parentId && (
+                          <span style={{ color: '#666', fontSize: 11, marginLeft: 6 }}>
+                            (child of {tasks.find((p) => p.id === t.parentId)?.title ?? '…'})
+                          </span>
+                        )}
+                      </span>
+                      <span className="td-item-arrow">
+                        <span className="material-symbols-rounded">add</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+          </>
+        )}
       </Modal>
 
       {/* Add existing task as dependency modal */}
