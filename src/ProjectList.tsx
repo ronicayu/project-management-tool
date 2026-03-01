@@ -10,6 +10,7 @@ interface ProjectListProps {
   projectStats: Record<string, ProjectStats>
   loading: boolean
   onCreateProject: (name: string) => void | Promise<void>
+  onCloneProject: (id: string, name: string) => void | Promise<void>
   onDeleteProject: (id: string) => void | Promise<void>
   onEnterProject: (project: Project) => void
 }
@@ -49,11 +50,13 @@ function ProjectCard({
   project,
   stats,
   onEnter,
+  onClone,
   onDelete,
 }: {
   project: Project
   stats: ProjectStats | undefined
   onEnter: () => void
+  onClone: () => void
   onDelete: () => void
 }) {
   const status = getProjectStatus(stats)
@@ -73,25 +76,37 @@ function ProjectCard({
 
   return (
     <div className="project-card" onClick={onEnter}>
-      <Popconfirm
-        title="Delete this project?"
-        description="All tasks will be deleted. This cannot be undone."
-        onConfirm={(e) => {
-          e?.stopPropagation()
-          onDelete()
-        }}
-        onCancel={(e) => e?.stopPropagation()}
-        okText="Delete"
-        okButtonProps={{ danger: true }}
-      >
+      <div className="card-actions">
         <button
-          className="card-delete-btn"
-          onClick={(e) => e.stopPropagation()}
-          title="Delete project"
+          className="card-action-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClone()
+          }}
+          title="Clone project"
         >
-          <span className="material-symbols-rounded">delete</span>
+          <span className="material-symbols-rounded">content_copy</span>
         </button>
-      </Popconfirm>
+        <Popconfirm
+          title="Delete this project?"
+          description="All tasks will be deleted. This cannot be undone."
+          onConfirm={(e) => {
+            e?.stopPropagation()
+            onDelete()
+          }}
+          onCancel={(e) => e?.stopPropagation()}
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+        >
+          <button
+            className="card-action-btn"
+            onClick={(e) => e.stopPropagation()}
+            title="Delete project"
+          >
+            <span className="material-symbols-rounded">delete</span>
+          </button>
+        </Popconfirm>
+      </div>
 
       {/* Header */}
       <div className="card-header">
@@ -141,12 +156,18 @@ export function ProjectList({
   projectStats,
   loading,
   onCreateProject,
+  onCloneProject,
   onDeleteProject,
   onEnterProject,
 }: ProjectListProps) {
   const [modalOpen, setModalOpen] = useState(false)
   const [name, setName] = useState('')
   const [creating, setCreating] = useState(false)
+
+  const [cloneModalOpen, setCloneModalOpen] = useState(false)
+  const [cloneSourceId, setCloneSourceId] = useState<string | null>(null)
+  const [cloneName, setCloneName] = useState('')
+  const [cloning, setCloning] = useState(false)
 
   const handleCreate = async () => {
     const trimmed = name.trim()
@@ -159,6 +180,26 @@ export function ProjectList({
     } finally {
       setCreating(false)
     }
+  }
+
+  const handleClone = async () => {
+    const trimmed = cloneName.trim()
+    if (!trimmed || !cloneSourceId) return
+    setCloning(true)
+    try {
+      await onCloneProject(cloneSourceId, trimmed)
+      setCloneName('')
+      setCloneSourceId(null)
+      setCloneModalOpen(false)
+    } finally {
+      setCloning(false)
+    }
+  }
+
+  const openCloneModal = (project: Project) => {
+    setCloneSourceId(project.id)
+    setCloneName(`${project.name} (Copy)`)
+    setCloneModalOpen(true)
   }
 
   return (
@@ -189,6 +230,7 @@ export function ProjectList({
                 project={project}
                 stats={projectStats[project.id]}
                 onEnter={() => onEnterProject(project)}
+                onClone={() => openCloneModal(project)}
                 onDelete={() => onDeleteProject(project.id)}
               />
             ))}
@@ -224,6 +266,34 @@ export function ProjectList({
           autoFocus
           size="large"
           style={{ marginTop: 16 }}
+        />
+      </Modal>
+
+      {/* Clone Project Modal */}
+      <Modal
+        title="Clone Project"
+        open={cloneModalOpen}
+        onOk={handleClone}
+        onCancel={() => {
+          setCloneModalOpen(false)
+          setCloneName('')
+          setCloneSourceId(null)
+        }}
+        okText="Clone"
+        confirmLoading={cloning}
+        className="create-project-modal"
+        destroyOnHidden
+      >
+        <p style={{ color: '#888', fontSize: 13, margin: '8px 0 16px' }}>
+          All tasks, dependencies, and canvas positions will be copied to the new project.
+        </p>
+        <Input
+          placeholder="New project name"
+          value={cloneName}
+          onChange={(e) => setCloneName(e.target.value)}
+          onPressEnter={handleClone}
+          autoFocus
+          size="large"
         />
       </Modal>
     </div>

@@ -4,7 +4,7 @@ const connectionString = process.env.DATABASE_URL ?? process.env.POSTGRES_URL ??
 const pool = new Pool({
     connectionString,
 });
-const TASK_SELECT = 'id, project_id, title, start_date, duration, parent_id, COALESCE(dependency_ids, ARRAY[]::uuid[]) AS dependency_ids, COALESCE(details, \'\') AS details, COALESCE(tags, ARRAY[]::text[]) AS tags, created_at';
+const TASK_SELECT = 'id, project_id, title, start_date, duration, parent_id, COALESCE(dependency_ids, ARRAY[]::uuid[]) AS dependency_ids, COALESCE(details, \'\') AS details, COALESCE(tags, ARRAY[]::text[]) AS tags, canvas_x, canvas_y, canvas_color, created_at';
 function rowToTask(row) {
     return {
         id: row.id,
@@ -15,6 +15,9 @@ function rowToTask(row) {
         dependencyIds: row.dependency_ids ?? [],
         details: row.details ?? '',
         tags: Array.isArray(row.tags) ? row.tags : [],
+        canvasX: row.canvas_x ?? null,
+        canvasY: row.canvas_y ?? null,
+        canvasColor: row.canvas_color ?? null,
         createdAt: new Date(row.created_at).toISOString(),
     };
 }
@@ -83,6 +86,18 @@ export async function updateTask(id, updates) {
         fields.push(`tags = $${i++}::text[]`);
         values.push(Array.isArray(updates.tags) ? updates.tags : []);
     }
+    if (updates.canvasX !== undefined) {
+        fields.push(`canvas_x = $${i++}`);
+        values.push(updates.canvasX);
+    }
+    if (updates.canvasY !== undefined) {
+        fields.push(`canvas_y = $${i++}`);
+        values.push(updates.canvasY);
+    }
+    if (updates.canvasColor !== undefined) {
+        fields.push(`canvas_color = $${i++}`);
+        values.push(updates.canvasColor);
+    }
     if (fields.length === 0)
         return null;
     values.push(id);
@@ -136,6 +151,60 @@ export async function getProjectStats() {
         done: Number(row.done),
         latestDue: row.latest_due ? new Date(row.latest_due).toISOString().split('T')[0] : null,
     }));
+}
+export async function cloneProject(sourceProjectId, newName) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        // 1. Create the new project
+        const projRes = await client.query('INSERT INTO projects (name) VALUES ($1) RETURNING id, name, created_at', [newName]);
+        const newProject = rowToProject(projRes.rows[0]);
+        // 2. Fetch all tasks from the source project (ordered so parents come before children)
+        const tasksRes = await client.query(`SELECT ${TASK_SELECT} FROM tasks WHERE project_id = $1 ORDER BY created_at`, [sourceProjectId]);
+        const sourceTasks = tasksRes.rows;
+        if (sourceTasks.length === 0) {
+            await client.query('COMMIT');
+            return { project: newProject, taskCount: 0 };
+        }
+        // 3. Insert cloned tasks and build old-id → new-id mapping
+        const idMap = new Map();
+        for (const task of sourceTasks) {
+            const insertRes = await client.query(`INSERT INTO tasks (project_id, title, start_date, duration, parent_id, dependency_ids, details, tags, canvas_x, canvas_y, canvas_color)
+         VALUES ($1, $2, $3::date, $4, $5, $6::uuid[], $7, $8::text[], $9, $10, $11)
+         RETURNING id`, [
+                newProject.id,
+                task.title,
+                task.start_date,
+                task.duration,
+                null, // parent_id set in step 4
+                '{}', // dependency_ids set in step 4
+                task.details ?? '',
+                task.tags ?? [],
+                task.canvas_x,
+                task.canvas_y,
+                task.canvas_color,
+            ]);
+            idMap.set(task.id, insertRes.rows[0].id);
+        }
+        // 4. Re-map parent_id and dependency_ids to new IDs
+        for (const task of sourceTasks) {
+            const newId = idMap.get(task.id);
+            const newParentId = task.parent_id ? idMap.get(task.parent_id) ?? null : null;
+            const newDepIds = (task.dependency_ids ?? [])
+                .map((depId) => idMap.get(depId))
+                .filter((id) => id != null);
+            await client.query(`UPDATE tasks SET parent_id = $1::uuid, dependency_ids = $2::uuid[] WHERE id = $3::uuid`, [newParentId, newDepIds, newId]);
+        }
+        await client.query('COMMIT');
+        return { project: newProject, taskCount: sourceTasks.length };
+    }
+    catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+    }
+    finally {
+        client.release();
+    }
 }
 export async function getTaskById(id) {
     const res = await pool.query(`SELECT ${TASK_SELECT} FROM tasks WHERE id = $1`, [id]);

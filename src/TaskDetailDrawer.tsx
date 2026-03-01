@@ -64,6 +64,7 @@ interface TaskDetailDrawerProps {
   ) => void
   onRemoveDependency: (taskId: string, dependsOnTaskId: string) => void
   onOpenTask: (id: string) => void
+  onOpenNewTask: (parentId: string) => void
 }
 
 export function TaskDetailDrawer({
@@ -77,6 +78,7 @@ export function TaskDetailDrawer({
   onCreateTaskAndAddDependency,
   onRemoveDependency,
   onOpenTask,
+  onOpenNewTask,
 }: TaskDetailDrawerProps) {
   const task = tasks.find((t) => t.id === taskId) ?? null
   const [editingTitle, setEditingTitle] = useState(false)
@@ -85,11 +87,6 @@ export function TaskDetailDrawer({
   const [notesDraft, setNotesDraft] = useState('')
   const titleInputRef = useRef<HTMLInputElement>(null)
   const notesInputRef = useRef<HTMLTextAreaElement>(null)
-
-  const [showAddChildModal, setShowAddChildModal] = useState(false)
-  const [addChildTitle, setAddChildTitle] = useState('')
-  const [addChildStart, setAddChildStart] = useState<string | null>(null)
-  const [addChildDuration, setAddChildDuration] = useState(1)
 
   const [showAddExistingChildModal, setShowAddExistingChildModal] = useState(false)
   const [childSearchQuery, setChildSearchQuery] = useState('')
@@ -207,20 +204,6 @@ export function TaskDetailDrawer({
       onUpdate(task.id, { details: trimmed })
     }
     setEditingNotes(false)
-  }
-
-  const openAddChildModal = () => {
-    setAddChildTitle('')
-    setAddChildStart(null)
-    setAddChildDuration(1)
-    setShowAddChildModal(true)
-  }
-
-  const submitAddChild = () => {
-    const title = addChildTitle.trim()
-    if (!title) return
-    onAddChild(task.id, title, addChildStart, addChildDuration)
-    setShowAddChildModal(false)
   }
 
   const openCreateAndAddDepModal = () => {
@@ -366,7 +349,7 @@ export function TaskDetailDrawer({
             <button
               type="button"
               className="td-action-btn secondary"
-              onClick={openAddChildModal}
+              onClick={() => onOpenNewTask(task.id)}
             >
               <span className="material-symbols-rounded">add</span>
               New child task
@@ -578,46 +561,6 @@ export function TaskDetailDrawer({
           </Popconfirm>
         </div>
       </div>
-
-      {/* Add child modal */}
-      <Modal
-        title="Add child task"
-        open={showAddChildModal}
-        onCancel={() => setShowAddChildModal(false)}
-        onOk={submitAddChild}
-        okText="Create"
-        okButtonProps={{ disabled: !addChildTitle.trim() }}
-        destroyOnClose
-      >
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          <div>
-            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Title</label>
-            <Input
-              value={addChildTitle}
-              onChange={(e) => setAddChildTitle(e.target.value)}
-              placeholder="Child task title"
-              onPressEnter={submitAddChild}
-            />
-          </div>
-          <div>
-            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Start date (optional)</label>
-            <DatePicker
-              value={addChildStart ? dayjs(addChildStart) : null}
-              onChange={(date) => setAddChildStart(date ? date.format('YYYY-MM-DD') : null)}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div>
-            <label className="td-label" style={{ display: 'block', marginBottom: 6 }}>Duration (days)</label>
-            <InputNumber
-              min={1}
-              value={addChildDuration}
-              onChange={(v) => setAddChildDuration(v ?? 1)}
-              style={{ width: '100%' }}
-            />
-          </div>
-        </Space>
-      </Modal>
 
       {/* Add existing task as child modal */}
       <Modal

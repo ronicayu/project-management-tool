@@ -84,6 +84,22 @@ app.get('/api/projects/:id', async (req, res) => {
   }
 })
 
+app.post('/api/projects/:id/clone', async (req, res) => {
+  try {
+    const { name } = req.body
+    if (!name || String(name).trim() === '') {
+      return res.status(400).json({ error: 'name is required' })
+    }
+    const source = await db.getProjectById(req.params.id)
+    if (!source) return res.status(404).json({ error: 'Source project not found' })
+    const result = await db.cloneProject(req.params.id, String(name).trim())
+    res.status(201).json(result.project)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to clone project' })
+  }
+})
+
 app.delete('/api/projects/:id', async (req, res) => {
   try {
     const deleted = await db.deleteProject(req.params.id)

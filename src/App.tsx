@@ -5,6 +5,7 @@ import {
   getProjects,
   getProjectStats,
   createProject,
+  cloneProject,
   deleteProject,
   getTasksByProjectId,
   createTask,
@@ -98,6 +99,15 @@ export default function App() {
       await refreshProjects()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create project')
+    }
+  }
+
+  const handleCloneProject = async (id: string, name: string) => {
+    try {
+      await cloneProject(id, name)
+      await refreshProjects()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to clone project')
     }
   }
 
@@ -202,6 +212,17 @@ export default function App() {
     }
   }
 
+  const openNewTaskModal = useCallback((initialParentId?: string | null) => {
+    setNewTaskTitle('')
+    setNewTaskStart('')
+    setNewTaskDuration(1)
+    setNewTaskDurationUnit('day')
+    setNewTaskParentId(initialParentId ?? null)
+    setNewTaskDetails('')
+    setNewTaskTags('')
+    setShowNewTask(true)
+  }, [])
+
   const handleNewTaskSubmit = () => {
     const t = newTaskTitle.trim()
     if (!t) return
@@ -217,6 +238,17 @@ export default function App() {
     setNewTaskDetails('')
     setNewTaskTags('')
   }
+
+  const resetAndCloseNewTaskModal = useCallback(() => {
+    setShowNewTask(false)
+    setNewTaskTitle('')
+    setNewTaskStart('')
+    setNewTaskDuration(1)
+    setNewTaskDurationUnit('day')
+    setNewTaskParentId(null)
+    setNewTaskDetails('')
+    setNewTaskTags('')
+  }, [])
 
   // ── Computed header info ──────────────────────────────────
 
@@ -258,6 +290,7 @@ export default function App() {
           projectStats={projectStatsMap}
           loading={loading}
           onCreateProject={handleCreateProject}
+          onCloneProject={handleCloneProject}
           onDeleteProject={handleDeleteProject}
           onEnterProject={(p) => setCurrentProject(p)}
         />
@@ -299,7 +332,7 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <button className="new-task-btn" onClick={() => setShowNewTask(true)}>
+            <button className="new-task-btn" onClick={() => openNewTaskModal()}>
               <span className="material-symbols-rounded" style={{ fontSize: 18 }}>add</span>
               <span>New Task</span>
             </button>
@@ -404,15 +437,16 @@ export default function App() {
             onCreateTaskAndAddDependency={handleCreateTaskAndAddDependency}
             onRemoveDependency={handleRemoveDependency}
             onOpenTask={setSelectedTaskId}
+            onOpenNewTask={(parentId) => openNewTaskModal(parentId)}
           />
         </>
       )}
 
-      {/* New Task Modal */}
+      {/* New Task Modal (shared for new task and new child task) */}
       <Modal
         open={showNewTask}
-        title="New Task"
-        onCancel={() => setShowNewTask(false)}
+        title={newTaskParentId ? 'New Child Task' : 'New Task'}
+        onCancel={resetAndCloseNewTaskModal}
         onOk={handleNewTaskSubmit}
         okText="Create"
         okButtonProps={{ disabled: !newTaskTitle.trim() }}

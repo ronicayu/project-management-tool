@@ -86,10 +86,6 @@
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15);
 }
 
-.project-card:hover .card-delete-btn {
-  opacity: 1;
-}
-
 /* ── Card Header ──────────────────────────────────────────── */
 .card-header {
   display: flex;
@@ -232,32 +228,53 @@
   color: var(--text-muted);
 }
 
-/* ── Card Delete ──────────────────────────────────────────── */
-.card-delete-btn {
+/* ── Card Actions ─────────────────────────────────────────── */
+.card-actions {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+.project-card:hover .card-actions {
+  opacity: 1;
+}
+
+.card-action-btn {
   width: 28px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(102, 102, 128, 0.1);
   border: none;
   border-radius: 6px;
-  color: var(--danger);
+  color: var(--text-muted);
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s, background 0.15s;
+  transition: background 0.15s, color 0.15s;
   padding: 0;
-  z-index: 2;
 }
 
-.card-delete-btn:hover {
+.card-action-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent);
+}
+
+.card-action-btn:last-child {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.card-action-btn:last-child:hover {
   background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
 }
 
-.card-delete-btn .material-symbols-rounded {
+.card-action-btn .material-symbols-rounded {
   font-size: 16px;
 }
 

@@ -34,6 +34,13 @@ export async function createProject(name: string): Promise<Project> {
   })
 }
 
+export async function cloneProject(id: string, name: string): Promise<Project> {
+  return request<Project>(`/projects/${id}/clone`, {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  })
+}
+
 export async function deleteProject(id: string): Promise<boolean> {
   await request(`/projects/${id}`, { method: 'DELETE', parseJson: false })
   return true

@@ -82,6 +82,23 @@ app.get('/api/projects/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to load project' });
     }
 });
+app.post('/api/projects/:id/clone', async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || String(name).trim() === '') {
+            return res.status(400).json({ error: 'name is required' });
+        }
+        const source = await db.getProjectById(req.params.id);
+        if (!source)
+            return res.status(404).json({ error: 'Source project not found' });
+        const result = await db.cloneProject(req.params.id, String(name).trim());
+        res.status(201).json(result.project);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to clone project' });
+    }
+});
 app.delete('/api/projects/:id', async (req, res) => {
     try {
         const deleted = await db.deleteProject(req.params.id);
@@ -135,6 +152,9 @@ app.patch('/api/tasks/:id', async (req, res) => {
             dependencyIds: updates.dependencyIds,
             details: updates.details,
             tags: updates.tags,
+            canvasX: updates.canvasX,
+            canvasY: updates.canvasY,
+            canvasColor: updates.canvasColor,
         });
         if (!task)
             return res.status(404).json({ error: 'Task not found' });
