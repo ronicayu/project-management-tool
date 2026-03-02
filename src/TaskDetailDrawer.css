@@ -1,13 +1,15 @@
 /* ── Task Detail Panel ─────────────────────────────────────── */
 .td-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 320px;
-  flex-shrink: 0;
   background: #12121c;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border-left: 1px solid #1a1a26;
-  position: relative;
   z-index: 50;
 }
 

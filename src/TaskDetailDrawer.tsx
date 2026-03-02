@@ -3,6 +3,7 @@ import { Popconfirm, Modal, Input, InputNumber, DatePicker, Button, Space } from
 import dayjs from 'dayjs'
 import type { Task } from './types'
 import { format, parseISO } from 'date-fns'
+import { getEffectiveTaskBounds } from './utils/dateUtils'
 import './TaskDetailDrawer.css'
 
 function dependsOnTransitive(tasks: Task[], taskId: string, targetId: string): boolean {
@@ -293,6 +294,25 @@ export function TaskDetailDrawer({
             <span className="td-label">Duration</span>
             <span className="td-detail-val">{task.duration} day{task.duration !== 1 ? 's' : ''}</span>
           </div>
+          {children.length > 0 && (
+            <div className="td-detail-col" style={{ alignSelf: 'flex-end' }}>
+              <button
+                type="button"
+                className="td-action-btn secondary"
+                title="Calculate start and duration from child tasks"
+                onClick={() => {
+                  const bounds = getEffectiveTaskBounds(tasks, task.id)
+                  const updates: Partial<Pick<Task, 'startDate' | 'duration'>> = {}
+                  if (bounds.startDate !== task.startDate) updates.startDate = bounds.startDate
+                  if (bounds.duration > 0 && bounds.duration !== task.duration) updates.duration = bounds.duration
+                  if (Object.keys(updates).length > 0) onUpdate(task.id, updates)
+                }}
+              >
+                <span className="material-symbols-rounded">calculate</span>
+                From children
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Status */}

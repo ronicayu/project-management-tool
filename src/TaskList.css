@@ -86,10 +86,6 @@
   min-width: 0;
 }
 
-.tl-task-col.indented {
-  padding-left: 30px;
-}
-
 .tl-drag-handle {
   color: #3a3a4a;
   flex-shrink: 0;

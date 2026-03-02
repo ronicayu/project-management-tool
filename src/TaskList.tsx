@@ -401,7 +401,10 @@ export function TaskList({
               onDrop={(e) => handleDrop(e, task.id)}
             >
               {/* Task Name Column */}
-              <div className={`tl-task-col ${isChild ? 'indented' : ''}`}>
+              <div
+                className="tl-task-col"
+                style={depth > 0 ? { paddingLeft: 16 + depth * 24 } : undefined}
+              >
                 <span
                   className="tl-drag-handle"
                   draggable
