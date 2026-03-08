@@ -135,6 +135,10 @@ export function durationInUnits(days: number, unit: TimeUnit): number {
 export interface AxisTick {
   date: Date
   label: string
+  /** First line of 2-row label (e.g. year) */
+  labelLine1?: string
+  /** Second line of 2-row label (e.g. quarter) */
+  labelLine2?: string
   offsetUnits: number
 }
 
@@ -150,6 +154,8 @@ export function getAxisTicks(min: Date, max: Date, unit: TimeUnit): AxisTick[] {
       ticks.push({
         date: d,
         label: format(d, 'MMM d'),
+        labelLine1: format(d, 'MMM'),
+        labelLine2: format(d, 'd'),
         offsetUnits: Math.max(0, differenceInDays(d, min) / daysPer),
       })
       d = addDays(d, 7)
@@ -162,6 +168,8 @@ export function getAxisTicks(min: Date, max: Date, unit: TimeUnit): AxisTick[] {
     return weeks.map((d) => ({
       date: d,
       label: format(d, 'MMM d'),
+      labelLine1: format(d, 'MMM'),
+      labelLine2: format(d, 'd'),
       offsetUnits: differenceInDays(d, min) / daysPer,
     }))
   }
@@ -171,6 +179,8 @@ export function getAxisTicks(min: Date, max: Date, unit: TimeUnit): AxisTick[] {
     return months.map((d) => ({
       date: d,
       label: format(d, 'MMM yyyy'),
+      labelLine1: format(d, 'yyyy'),
+      labelLine2: format(d, 'MMM'),
       offsetUnits: differenceInDays(d, min) / daysPer,
     }))
   }
@@ -180,6 +190,8 @@ export function getAxisTicks(min: Date, max: Date, unit: TimeUnit): AxisTick[] {
     return quarters.map((d) => ({
       date: d,
       label: `Q${Math.ceil((d.getMonth() + 1) / 3)} ${format(d, 'yyyy')}`,
+      labelLine1: format(d, 'yyyy'),
+      labelLine2: `Q${Math.ceil((d.getMonth() + 1) / 3)}`,
       offsetUnits: differenceInDays(d, min) / daysPer,
     }))
   }

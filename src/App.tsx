@@ -382,7 +382,7 @@ export default function App() {
                   />
                 </Space>
               </div>
-              <TimelineView tasks={tasks} timeUnit={timeUnit} onUpdateTask={handleUpdateTask} />
+              <TimelineView tasks={tasks} timeUnit={timeUnit} onUpdateTask={handleUpdateTask} onSelectTask={setSelectedTaskId} />
             </div>
           ) : view === 'canvas' ? (
             <CanvasView

@@ -95,6 +95,9 @@ export function TaskDetailDrawer({
 
   const [showAddDepModal, setShowAddDepModal] = useState(false)
   const [showCreateAndAddDepModal, setShowCreateAndAddDepModal] = useState(false)
+  const [showParentModal, setShowParentModal] = useState(false)
+  const [parentSearchQuery, setParentSearchQuery] = useState('')
+  const parentSearchRef = useRef<HTMLInputElement>(null)
   const [createDepTitle, setCreateDepTitle] = useState('')
   const [createDepStart, setCreateDepStart] = useState<string | null>(null)
   const [createDepDuration, setCreateDepDuration] = useState(1)
@@ -132,6 +135,13 @@ export function TaskDetailDrawer({
     }
     if (!showAddExistingChildModal) setChildSearchQuery('')
   }, [showAddExistingChildModal])
+
+  useEffect(() => {
+    if (showParentModal && parentSearchRef.current) {
+      parentSearchRef.current.focus()
+    }
+    if (!showParentModal) setParentSearchQuery('')
+  }, [showParentModal])
 
   useEffect(() => {
     if (showLabelInput && labelInputRef.current) {
@@ -189,6 +199,11 @@ export function TaskDetailDrawer({
       t.id !== task.id &&
       !task.dependencyIds.includes(t.id) &&
       !dependsOnTransitive(tasks, t.id, task.id)
+  )
+
+  // Tasks that can be parent: not self, and not a descendant (would create cycle)
+  const canBeParent = tasks.filter(
+    (t) => t.id !== task.id && !isAncestor(task.id, t.id)
   )
 
   const handleSaveTitle = () => {
@@ -542,13 +557,14 @@ export function TaskDetailDrawer({
         </div>
 
         {/* Parent Task */}
-        {parent && (
-          <>
-            <div className="td-divider" style={{ margin: 0 }} />
-            <div className="td-section">
-              <span className="td-label">Parent Task</span>
+        <div className="td-divider" style={{ margin: 0 }} />
+        <div className="td-section">
+          <span className="td-label">Parent Task</span>
+          {parent ? (
+            <div className="td-item-row" style={{ flexWrap: 'wrap', gap: 4 }}>
               <div
                 className="td-item-row"
+                style={{ flex: 1, minWidth: 0 }}
                 onClick={() => onOpenTask(parent.id)}
               >
                 <div
@@ -557,9 +573,40 @@ export function TaskDetailDrawer({
                 />
                 <span className="td-item-name">{parent.title}</span>
               </div>
+              <Space size={4} wrap>
+                <button
+                  type="button"
+                  className="td-action-btn secondary"
+                  onClick={() => setShowParentModal(true)}
+                  title="Change parent"
+                >
+                  Change
+                </button>
+                <Popconfirm
+                  title="Remove parent?"
+                  description="This task will become a top-level task."
+                  onConfirm={() => onUpdate(task.id, { parentId: null })}
+                >
+                  <button type="button" className="td-action-btn secondary" title="Remove parent">
+                    Remove
+                  </button>
+                </Popconfirm>
+              </Space>
             </div>
-          </>
-        )}
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span className="td-notes-empty">No parent (top-level)</span>
+              <button
+                type="button"
+                className="td-action-btn secondary"
+                onClick={() => setShowParentModal(true)}
+              >
+                <span className="material-symbols-rounded">add</span>
+                Set parent
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="td-divider" style={{ margin: 0 }} />
@@ -645,6 +692,90 @@ export function TaskDetailDrawer({
               )
             })()}
           </>
+        )}
+      </Modal>
+
+      {/* Change/Set parent modal */}
+      <Modal
+        title={parent ? 'Change parent task' : 'Set parent task'}
+        open={showParentModal}
+        onCancel={() => setShowParentModal(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <p style={{ color: 'var(--text-muted)', marginBottom: 12 }}>
+          Choose a task to be the parent of <strong>{task.title}</strong>.
+        </p>
+        <div style={{ marginBottom: 12 }}>
+          <button
+            type="button"
+            className="td-item-row"
+            style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 8 }}
+            onClick={() => {
+              onUpdate(task.id, { parentId: null })
+              setShowParentModal(false)
+            }}
+          >
+            <span className="td-item-name">None (top-level)</span>
+            <span className="td-item-arrow">
+              <span className="material-symbols-rounded">check</span>
+            </span>
+          </button>
+          {canBeParent.length > 0 && (
+            <>
+              <input
+                ref={parentSearchRef}
+                className="td-edit-input"
+                placeholder="Search tasks…"
+                value={parentSearchQuery}
+                onChange={(e) => setParentSearchQuery(e.target.value)}
+                style={{ width: '100%' }}
+              />
+            </>
+          )}
+        </div>
+        {canBeParent.length === 0 ? (
+          <span className="td-notes-empty">No other tasks available as parent.</span>
+        ) : (
+          (() => {
+            const q = parentSearchQuery.toLowerCase().trim()
+            const filtered = q
+              ? canBeParent.filter((t) => t.title.toLowerCase().includes(q))
+              : canBeParent
+            if (filtered.length === 0) {
+              return <span className="td-notes-empty">No matching tasks.</span>
+            }
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 280, overflowY: 'auto' }}>
+                {filtered.map((t) => (
+                  <div
+                    key={t.id}
+                    className="td-item-row"
+                    onClick={() => {
+                      onUpdate(task.id, { parentId: t.id })
+                      setShowParentModal(false)
+                    }}
+                  >
+                    <div
+                      className="td-item-dot"
+                      style={{ background: STATUS_DOT_COLOR[getTaskStatus(t)] }}
+                    />
+                    <span className="td-item-name">
+                      {t.title}
+                      {t.parentId && (
+                        <span style={{ color: '#666', fontSize: 11, marginLeft: 6 }}>
+                          (child of {tasks.find((p) => p.id === t.parentId)?.title ?? '…'})
+                        </span>
+                      )}
+                    </span>
+                    <span className="td-item-arrow">
+                      <span className="material-symbols-rounded">add</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )
+          })()
         )}
       </Modal>
 
